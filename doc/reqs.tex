@@ -1,0 +1,17 @@
+\section{Requirements}\label{sec:reqs}
+
+\begin{enumerate}
+  \item Must be able to detect NXDOMAINs on outbound A queries to local caching resolver, intercept, and insert queries for NAT3 RR at same
+name.  If response exists, must create an NAT3 tunnel and return to original querier a locally routable IP address that NAT3 will be
+listening on,
+  \item Must be able to accept ALL IP traffic on the local IP subnet: $127.1.0.0/16$ (henceforth referred to as $Net_{nat3}$).
+  \item Must handle traffic on $Net_{nat3}$ by encapsulating original IP traffic into NAT3 tunnel specified by the destination address in
+$Net_{nat3}$
+  \item Must listen on a well known port (100) for incoming NAT3 connections and be able to de-encapsulate them and deliver them locally.
+When delivering them, an IP in $Net_{nat3}$ must be used as the source, so NAT3 can receive any responses.
+  \item Must only require port forwarding of a single port on NAT boxes
+    \begin{enumerate}
+      \item May use Universal Plug and Play (uPnP) instead of manual port forwarding, but only when that is available.
+    \end{enumerate}
+  \item Must compile and run properly on Linux (kernel 2.6.x) and OS X 10.4.x and OS 10.5.x.
+\end{enumerate}

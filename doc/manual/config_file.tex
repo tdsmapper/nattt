@@ -1,0 +1,20 @@
+\section {The configuration file}
+
+You need to create a configuration file with the following format.  \\
+
+\textit{option = value}\\
+
+\begin{minipage}{\textwidth}
+\begin{tabular}{| l | p{4in} |}
+\hline
+Name of option/Field & Meaning \\
+\hline
+\hline
+ip       & IP Address of your machine on the interface/network on which the NAT box is connected (Do not enter 127.0.0.1) \\
+\hline
+port     & The port to listen for incoming connections \footnote[1]{Assumes you forwarded the port, as mentioned in Section 2}  \\
+\hline
+resolver &  The IP Address of the DNS resolver set up to answer our NAT3 DNS requests\\
+\hline
+\end{tabular}
+\end{minipage}

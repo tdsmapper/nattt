@@ -1,0 +1,71 @@
+\section{Setting up the DNS Resolver}
+
+You must use BIND9 to resolve DNS queries. The reason is that the application uses custom DNS Record Type, which is in a format only BIND will understand.
+
+\subsection{Custom Resource Record (RR) Type}
+\label{sec:rr_type}
+In \textit{dns\_rr.h:12}, The number tells NAT3 which RR Number to query for. \\
+\begin{verbatim}
+#define DNS_RR_NAT3         65324
+\end{verbatim}
+
+If need be, change the number to any number between 65280-65535 (Private use numbers). The corresponding DNS RR Type in BIND9 will be \textit{TYPE6xxxx}. In the example above, it would be \textit{TYPE65324}. This is the type you should use in test queries (in section \ref{sec:dns_test}).\\
+
+
+
+
+\subsection{Generating the DNS RR}
+\label{sec:gen_dns_rr}
+To generate the DNS RR in a way NAT3 Daemon will understand it, use \textit{scripts/gen\_nat3.pl}. The format for the script is:\\
+\textit{./gen\_nat3.pl $<$name$>$ $<$external$>$ $<$port$>$ $<$internal$>$} \\
+
+Where: \\
+\begin{minipage}{\textwidth}
+\begin{tabular}{| l | p{4in} |}
+            \hline
+name     & Name of the DNS record \footnote{Must be a Fully Qualified Domain Name, ending with a period(.)}\\
+            \hline
+external & External IP Address of the NAT box \footnote{For now, the daemon only works with one level of NAT}\\
+            \hline
+port     & The port forwarded to the machine running the daemon \footnote{Assumes that either UPnP Worked, or you manually forwarded the port as in Section \ref{sec:upnp_pf} }\\
+            \hline
+internal & The machine (under the NAT's network) which you wish to reach \\
+            \hline
+\end{tabular}
+\end{minipage}
+\newline
+The result of the script can be copy-pasted in the DNS Zone File.\\
+
+Also note that the script in section assumes the presence of the header \textit{dns\_rr.h} (see section \ref{sec:rr_type}). It looks for the RR type number from the header file.
+
+\subsection{Setting up the DNS Zone}
+On the DNS Server, you need to set up a zone that is authoritative for names that will return a NAT3 Record.\\
+A good source of information is: http://www.debuntu.org/book/export/html/85.\\
+
+Once that is done, paste the result of the script from section \ref{sec:dns_rr_gen} in the db file for the zone.
+
+\subsection{Testing the DNS resolver}
+\label{sec:dns_test}
+You can use the following command to make sure the DNS resolver works as we want it to:
+
+\textit{dig @$<$DNS Server hostname$>$ $<$Name of target host$>$ $<$DNS Type$>$}\\
+
+Where,
+
+\begin{minipage}{\textwidth}
+\begin{tabular}{| l | p{4in} |}
+            \hline
+DNS Server hostname & Name of the machine on which the DNS resolver is running.\\
+            \hline
+Name of target host & The name which will corresponds to the NAT3 Record Type \footnote{See section \ref{sec:gen_dns_rr}}\\
+            \hline
+DNS Type            & The type of the DNS Record \footnote{See section \ref{sec:rr_type}}. \\
+            \hline
+\end{tabular}
+\end{minipage}
+\newline
+
+\textbf{Results of test}:\\
+
+Ideally, when you query for a DNS Type record of ``A'' with the above command, you should get either an NXDOMAIN, or a response with no answer section. Also, when you query for the NAT3 Record Type (as in section \ref{sec:rr_type}), you should get the result of what you pasted from the script (see section \ref{sec:gen_dns_rr}).
+

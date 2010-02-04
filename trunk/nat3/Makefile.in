@@ -1,0 +1,22 @@
+PROG = nat3d
+
+CC =    @CC@
+CXX =    @CXX@
+CFLAGS =  @CFLAGS@ @CPPFLAGS@ @DEFS@
+LDFLAGS = @LDFLAGS@ @LIBS@
+DEFINES = @DEFS@
+
+CFLAGS += -Wall -Werror -D_REENTRANT
+CFLAGS += -DDEBUG -g
+
+CXXFLAGS += $(CFLAGS)
+
+all:
+	-( mkdir -p bin )
+	$(MAKE) -C src
+
+$(PROG): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+
+clean:
+	$(MAKE) clean -C src

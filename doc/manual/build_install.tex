@@ -1,0 +1,23 @@
+\section{Building/Installing NAT 3 Daemon}
+
+\subsection{Installing the developer tools on a Mac OS X}
+To run NAT3 Daemon on a Mac, you need to install the Mac developer tools found at the Apple Developer Connection site: http://developer.apple.com/products/membership.html.\\
+
+Downloading and installing the free ADC Online Membership will suffice.
+
+\subsection{Installing TUN/TAP drivers for Mac OS X}
+Mac does not come with these drivers. Drivers are provided in the folder \textit{``libs/TunMacOSX.tar.gz''}.\\
+    
+Alternately,  you may download and install them from http://tuntaposx.sourceforge.net/. Failure to so will result in errors that prevent the NAT3 Daemon from running such as - ”Unable to open /dev/tun0”
+
+\subsection{Installing the MiniUPnPC library}
+\label{sec:dns_rr_gen}
+The MiniUPnPC library is found under the folder \textit{``libs''}.\\
+Install the MiniUPnPC library (miniupnpc-x.x.tar.gz) as you would install any other tool from source (./configure, make, make install).
+
+\subsection{Testing if UPnP works on your NAT box}
+Run upnptest from the bin folder. Pass to it the address of the machine’s interface that contains the NAT box you wish to traverse.\\
+\textit{upnptest $<$address of interface$>$}\\
+
+If the application reports an error, you must manually forward the port on the NAT box to the machine running the NAT3 Daemon. For further information, please look here: http://portforward.com.
+

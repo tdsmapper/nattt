@@ -1,0 +1,23 @@
+\section{Introduction}
+
+This document describes the high-level architecture and design of the NAT Traversal Through Tunneling (NATTT) project.  The goal of NATTT is
+to provide a simple tool that can (initially) be run on users' computers (servers, desktops, or laptops) that can tunnel through NAT boxes
+and provide end-to-end reachability.  This goal is motivated by the observation that NATs effectively eliminate the ability of parties in
+the Internet to make arbitrary connections to any machine, as the target machine may lie behind a NAT box and thus doesn't have a routable
+address.  Nevertheless, services that accept inbound connections (such as HTTP, SMTP, etc) may be run on these hosts and must be accessible
+from the public Internet.  NATTT has 2 main components to address this need: i) DNS naming component that allows any client to locate and
+construct a routable packet to clients behind NATs, and ii) a component that manages NATTT tunnels and exports local IP addresses to
+clients so that 3$^{rd}$ party software (such as web browsers) does not need to be modified \emph{at all} to use NATTT.
+
+There are many constraints and pitfalls that complicate this setting.  NAT boxes vary quite widely in their implementations and behaviors.
+It is unfortunate that very little common behavior can be expected across them.  For this reason, the NATTT design treats NAT boxes like
+black boxes and requires only one behavior from them (and attempts to use one other): port forwarding and universal plug and play (uPnP).
+The details of this are discussed in the architecture section.
+
+The rest of this document is structured as follows: Section~\ref{sec:motivation} describes the motivation of this project.  Next,
+Section~\ref{sec:reqs} details the requirements.  After this, Section~\ref{sec:arch} describes the architecture and Section~\ref{sec:comp}
+outlines the component decomposition.
+
+%% More specifically, NATTT uses a new type of DNS resource record (NAT3 RR) to let clients advertise
+%% the combination of their public-Internet facing NAT address (assigned by their ISP) and their internal address (typically asssigned by a
+%% DHCP box).  

@@ -1,0 +1,17 @@
+\section{Component Decomposition}\label{sec:comp}
+
+The architecture of NATTT has 2 major components: the DNS Resolver and the Tunnel Manager.  This section breaks these 2 high level components 
+down into their C++ classes and specifies their interfaces and interactions.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{figs/uml}
+\end{center}
+\caption{A UML diagram of the NATTT daemon.}
+\label{fig:uml}
+\end{figure}
+
+The overall design and interactions of these classes is shown by Figure~\ref{fig:uml}.  The individual classes are described below, and
+this section concludes with some use-cases.
+
+
