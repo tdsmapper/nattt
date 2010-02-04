@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Nat3Win", "Nat3Win.vcproj", "{7A6BD338-33C8-4A5B-BE9C-418592CFE15A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_tun_mgr", "test_tun_mgr\test_tun_mgr.vcproj", "{0C3945DD-F505-4D21-B876-C6DF00BC19C1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nat3ping", "nat3ping\nat3ping.vcproj", "{0CCFC726-57A0-4A08-BB9A-028F86395AD6}"
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 2
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Nat3Win.vcproj
+		SccLocalPath1 = .
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A6BD338-33C8-4A5B-BE9C-418592CFE15A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7A6BD338-33C8-4A5B-BE9C-418592CFE15A}.Debug|Win32.Build.0 = Debug|Win32
+		{7A6BD338-33C8-4A5B-BE9C-418592CFE15A}.Release|Win32.ActiveCfg = Release|Win32
+		{7A6BD338-33C8-4A5B-BE9C-418592CFE15A}.Release|Win32.Build.0 = Release|Win32
+		{0C3945DD-F505-4D21-B876-C6DF00BC19C1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0C3945DD-F505-4D21-B876-C6DF00BC19C1}.Debug|Win32.Build.0 = Debug|Win32
+		{0C3945DD-F505-4D21-B876-C6DF00BC19C1}.Release|Win32.ActiveCfg = Release|Win32
+		{0C3945DD-F505-4D21-B876-C6DF00BC19C1}.Release|Win32.Build.0 = Release|Win32
+		{0CCFC726-57A0-4A08-BB9A-028F86395AD6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0CCFC726-57A0-4A08-BB9A-028F86395AD6}.Debug|Win32.Build.0 = Debug|Win32
+		{0CCFC726-57A0-4A08-BB9A-028F86395AD6}.Release|Win32.ActiveCfg = Release|Win32
+		{0CCFC726-57A0-4A08-BB9A-028F86395AD6}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
