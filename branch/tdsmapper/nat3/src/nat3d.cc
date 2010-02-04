@@ -83,8 +83,8 @@ DWORD WINAPI windows_resolver_wrapper(LPVOID lParam)
 
 void *linux_bsd_resolver_wrapper(void *arg)
 {
-	uint32_t ip = (uint32_t)*arg;
-	return resolver_main(ip);
+	uint32_t *ip = (uint32_t *)arg;
+	return (void*)resolver_main(*ip);
 }
 
 #endif

@@ -377,7 +377,8 @@ void Resolver::read_unix_socket(void)
   do {
     r = recv(m_unix_fd, buf, sizeof(buf), 0);
     if (r == 8) {
-      uint32_t magic = ntohl(*(uint32_t *)buf);
+      uint32_t *ptr = (uint32_t*)buf;
+      uint32_t magic = ntohl(*ptr);
       if (magic == SOCK_MAGIC)
         m_tRes.sin_addr.s_addr = *(uint32_t *)(buf + 4);
     }

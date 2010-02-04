@@ -3,7 +3,11 @@
 #include "dns_name.h"
 #include "dns_compression.h"
 #include "dns_header.h" // for header size
-#include "types.h"\n#include "functions.h"
+#include "types.h"
+#include "functions.h"
+#ifndef _MSC_VER
+   #include <limits.h>
+#endif
 
 
 using namespace std;

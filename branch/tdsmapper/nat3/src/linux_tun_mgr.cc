@@ -2,6 +2,66 @@
 
 #ifndef _MSC_VER
 
+#ifndef __USE_BSD
+#define __USE_BSD
+#endif
+
+#include <errno.h>
+#include <fcntl.h>
+
+#ifndef _MSC_VER
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#else
+#include <Winsock2.h>
+#endif
+
+#ifndef __FAVOR_BSD
+#define __FAVOR_BSD
+#endif
+
+#ifndef _MSC_VER
+#include <netinet/tcp.h>
+#include <net/ethernet.h>
+#include <net/if_arp.h>
+#include <strings.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <unistd.h>
+#endif
+
+#ifdef __DARWIN_UNIX03
+#include <sys/sysctl.h>
+#include <net/ethernet.h>
+#include <net/if.h>
+#include <net/if_var.h>
+#include <net/if_dl.h>
+#include <net/if_types.h>
+#include <net/route.h>
+#endif
+
+#ifdef __linux
+  #include <linux/if_tun.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+
+#include "tun_mgr.h"
+#include "tun_defs.h"
+#include "tun_in_ent.h"
+#include "tun_out_ent.h"
+#include "mutex_helper.h"
+#include "types.h"
+#include "functions.h"
+#include "OS_tun_mgr.h"
+
+
 #include "tun_mgr.h"
 #include "OS_tun_mgr.h"
 #include "types.h"
@@ -271,18 +331,18 @@ bool TunnelMgr::listen()
           // Get the next packet.
           if (!readFrame(m_hTunFd, m_tOutReadPkt))
           {
-            eprintf("Unable to read packet from tun FD %d: %s\n", m_iTunFd, strerror(errno));
+            eprintf("Unable to read packet from tun FD %d: %s\n", m_hTunFd, strerror(errno));
           }
 
           // If we have the whole packet...
           if (m_tOutReadPkt.m_bComplete)
           {
-            if (handleFrame(m_tOutReadPkt))
+            if (handleFrame(m_tOutReadPkt)) // handleFrame changed to not enqueue
             {
-              if (!m_oOutboundQueue.enqueue(p_tPkt))
+              if (!m_oOutboundQueue.enqueue(m_tOutReadPkt))
               {
                 eprintf("Unable to enqueue outbound IP packet.\n");
-                destroyPkt(p_tPkt);
+                destroyPkt(m_tOutReadPkt);
               }
             }
             else
@@ -297,6 +357,7 @@ bool TunnelMgr::listen()
       }
     }
   }
+  return true;
 }
 
 bool TunnelMgr::configTunInterface(char *p_szDeviceName) 

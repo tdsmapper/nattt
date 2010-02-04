@@ -38,7 +38,7 @@
 #define HAVE_STRDUP 1
 
 /* Define to 1 if you have the `strerror' function. */
-#define HAVE_strerror 1
+#define HAVE_STRERROR 1
 
 /* Define to 1 if you have the `strftime' function. */
 #define HAVE_STRFTIME 1

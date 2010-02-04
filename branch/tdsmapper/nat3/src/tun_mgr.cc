@@ -11,17 +11,12 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #else
-//TODO: Include windows headers
+#include <Winsock2.h>
 #endif
 
 #ifndef __FAVOR_BSD
 #define __FAVOR_BSD
 #endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 
 #ifndef _MSC_VER
 #include <netinet/tcp.h>
@@ -32,8 +27,6 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
-#else
-//TODO: Include windows headers
 #endif
 
 #ifdef __DARWIN_UNIX03
@@ -46,6 +39,15 @@
 #include <net/route.h>
 #endif
 
+#ifdef __linux
+  #include <linux/if_tun.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+
 #include "tun_mgr.h"
 #include "tun_defs.h"
 #include "tun_in_ent.h"
@@ -54,10 +56,6 @@
 #include "types.h"
 #include "functions.h"
 #include "OS_tun_mgr.h"
-
-#ifdef __linux
-  #include <linux/if_tun.h>
-#endif
 
 using namespace std;
 
@@ -68,16 +66,15 @@ TunnelMgr::TunnelMgr()
     m_tTimeout(0),
     m_iMaxIn(0),
     m_iMaxOut(0),
+#ifndef _MSC_VER
+    m_sListenFd(-1), // TODO: Init in Windows
+    m_hTunFd(-1),
+#endif
     m_iPort(0),
     m_uLocalNet(0),
     m_uMask(0),
-    m_uNextIP(0), // See if there is a way to initialize m_tunFd and the m_listenFD
+    m_uNextIP(0),
     m_uListenIP(0)
-	#ifndef _MSC_VER /* Linux/BSD */
-	,
-	m_hTunFd(-1),
-	m_sListenFd(-1) // The -1 for invalid file des. is handled differently by Windows.
-	#endif
 {
 
 	memset(m_pTapMac, 0, 6);

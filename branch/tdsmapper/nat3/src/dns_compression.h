@@ -1,7 +1,9 @@
 #ifndef __DNS_COMPRESSION_H__
 #define __DNS_COMPRESSION_H__
 
-// #include <stdint.h>
+#ifndef _MSC_VER
+   #include <stdint.h>
+#endif
 #include <map>
 #include <list>
 #include <string>

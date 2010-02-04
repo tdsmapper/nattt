@@ -69,7 +69,7 @@ class Resolver
     bool try_send(struct sockaddr_in &, u_char *, size_t);
     void enqueue(struct sockaddr_in &, u_char *, size_t);
 
-#ifdef _MSC_VER 
+#ifndef _MSC_VER  // None of these needed/usable on Windows
     bool create_unix_socket(void);
     void read_unix_socket(void);
     void set_nonblocking(int);

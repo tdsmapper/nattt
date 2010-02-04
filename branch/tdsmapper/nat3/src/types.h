@@ -13,6 +13,9 @@
 #ifdef _MSC_VER
   #include <Winsock2.h>
   #include <Windows.h>
+#else
+   #include <stdlib.h>
+   #include <stdint.h>
 #endif
 
 /*
@@ -54,7 +57,7 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
 #ifndef _MSC_VER 
 	typedef int HANDLE;
 	typedef int SOCKET;
-  typedef ssize_t SSIZE_T;
+   typedef ssize_t SSIZE_T;
 
 /* Windows */
 #else

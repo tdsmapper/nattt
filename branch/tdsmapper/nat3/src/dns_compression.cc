@@ -1,5 +1,8 @@
 #include <iostream>
 #include <list>
+#ifndef _MSC_VER
+   #include <stdint.h>
+#endif
 
 #include "dns_compression.h"
 #include "dns_name.h"
