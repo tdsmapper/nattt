@@ -21,11 +21,8 @@
 #include "tun_out_ent.h"
 #include "functions.h"
 
-void OS_init(HANDLE *m_hTunFd, SOCKET *m_sListenFd)
-{
-
-  
-}
+OVERLAPPED tunOverlapped;
+WSAOVERLAPPED listenOverlapped;
 
 /* Search for the TAP device's GUID within this Registry key hKey. */
 bool SearchForDeviceGuid(HKEY hKey, __out TCHAR szGUID[]) 
@@ -115,6 +112,7 @@ bool SearchForDeviceGuid(HKEY hKey, __out TCHAR szGUID[])
 									size_t strlength;
 									HRESULT hr = StringCchLength(szValue, STRSAFE_MAX_CCH, &strlength);
 									StringCchCopy(szGUID, strlength+1, szValue);
+                  eprintf("The dev GUID is %s\n", szGUID);
 									bRet = true;
 									break;
 								}
@@ -142,7 +140,7 @@ void GetDeviceHumanName(TCHAR szGuid[], TCHAR szHumanName[])
 	{
 		int iCkLen = 1000;
 		TCHAR szConnectionKey[1000] = TAP_DEV_CLASS;
-		StringCchCat(szConnectionKey, iCkLen, TEXT("\\"));
+		//StringCchCat(szConnectionKey, iCkLen, TEXT("\\"));
 		StringCchCat(szConnectionKey, iCkLen, szGuid);
 		StringCchCat(szConnectionKey, iCkLen, TEXT("\\Connection") );
 		HKEY hKey;
@@ -156,6 +154,7 @@ void GetDeviceHumanName(TCHAR szGuid[], TCHAR szHumanName[])
 			if (lRet == ERROR_SUCCESS)
 			{
 				StringCchCopy(szHumanName, 255, szValue);
+        eprintf("The device name is %s\n", szHumanName);
 			}
 		}
 		RegCloseKey(hKey);
@@ -173,6 +172,8 @@ bool GetDeviceGuid(__out TCHAR guid[])
 	{
 		if (SearchForDeviceGuid(hKey, guid))
 		{
+      TCHAR szDevName[1000];
+      GetDeviceHumanName(guid, szDevName);
 			bRet = true;
 		}
 	}
@@ -208,7 +209,7 @@ HANDLE TunnelMgr::openTunInterface()
 			int status = 1; // init to "On"
 			DWORD sizeReturned;
 
-			/* Set the device to have "active media"/plugged-in status */
+			/* Set the device to have "active media"/plugged-in status in just TAP mode (default) */
 			if (!DeviceIoControl(hDev,
 				TAP_CONTROL_CODE(TAP_IOCTL_SET_MEDIA_STATUS, METHOD_BUFFERED),
 				&status,
@@ -222,9 +223,20 @@ HANDLE TunnelMgr::openTunInterface()
 				CloseHandle(hDev);
 				hDev = INVALID_HANDLE_VALUE;
 			}
+      else
+      {
+        configTunInterface(NULL);
+      }
 		}
 	}
 	return hDev;
+}
+
+bool TunnelMgr::configTunInterface(char *p_szDevice)
+{
+  // TODO: Port this to Windows
+  m_iTunMTU = 1500;
+  return true;
 }
 
 
@@ -234,17 +246,12 @@ bool TunnelMgr::listen()
 {
   /* Uses Microsoft overlapped I/O:
   http://msdn.microsoft.com/en-us/library/aa365683%28VS.85%29.aspx  */
+  WSAPROTOCOL_INFO wsp = {0};
+	GROUP g = {0};
 
-  // Allocate Buffers for the IN and OUT read packets (read documentation for details).
-  // IN read packet is handled by Listen FD. So IP_MAXPACKET is the read size.
-  m_tInReadPkt.m_pData = (char*)malloc(LISTEN_READ_SIZE);
-  assert(m_tInReadPkt.m_pData);
-  memset(&wsaBuf, 0, sizeof(wsaBuf)); // WSARecv requires that the buffer be in the form requested here.
-  wsaBuf.buf = m_tInReadPkt.m_pData;
-
-  // OUT Read packet is handled by Tun FD. So ETHERNET_READ_SIZE is the read size
-  m_tOutReadPkt.m_pData = (char*)malloc(ETHERNET_READ_SIZE);
-  assert(m_tOutReadPkt.m_pData);
+  /* This will cause GEN_DEV_FAILURE if not initalized */
+  memset(&tunOverlapped, 0, sizeof(tunOverlapped));  // important to set to 0
+  memset(&listenOverlapped, 0, sizeof(listenOverlapped));  // important to set to 0
 
   struct sockaddr_in tInAddr;
   memset(&tInAddr, 0, sizeof(tInAddr));
@@ -252,59 +259,65 @@ bool TunnelMgr::listen()
   tInAddr.sin_port = htons(m_iPort);
   tInAddr.sin_addr.s_addr = htonl(m_uListenIP);
 
-  WSADATA wsaData;
-  WSAPROTOCOL_INFO wsp = {0};
-	GROUP g = {0};
-
   if (!m_bInit)
   {
     eprintf("win_tun_mgr: Unable to listen until initialized\n");
   }
-  else if (WSAStartup(MAKEWORD(2,2), &wsaData) == NO_ERROR)
-  {
-    eprintf("win_tun_mgr: WSAStartup failed!\n");
-  }
   // Open our connection for incoming packets - in Overlapped mode
   else if ((m_sListenFd = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, g, WSA_FLAG_OVERLAPPED)) == INVALID_SOCKET)
   {
-    WSACleanup();
     eprintf("win_tun_mgr: Socket creation failed!\n");
   }
   // Open TUN/TAP interface in Overlapped I/O mode
   else if ((m_hTunFd = openTunInterface()) == INVALID_HANDLE_VALUE)
   {
-    WSACleanup();
     eprintf("win_tun_mgr: Tun interface did not open\n");
   }
   else if (SOCKET_ERROR == bind(m_sListenFd, (SOCKADDR*)&tInAddr, sizeof(tInAddr)))
   {
-    WSACleanup();
-    eprintf("win_tun_mgr: Bind to well known port fail!\n");
+    eprintf("win_tun_mgr: Bind to well known port fail with %d!. "
+      "Please make sure the address in the config file is correct, and that the port is usable\n", GetLastError());
   }
   // All initializations successful!
   else
   {
-    int srcAddrSize = sizeof(srcAddr);
-    // Equivalent of the Linux select loop
+    // Allocate Buffers for the IN and OUT read packets (read documentation for details).
+    // IN read packet is handled by Listen FD. So IP_MAXPACKET is the read size.
+    clearPkt(m_tInReadPkt);
+    m_tInReadPkt.m_pData = new char[LISTEN_READ_SIZE];
+    memset(&wsaBuf, 0, sizeof(wsaBuf)); // WSARecv requires that the buffer be in the form requested here.
+    wsaBuf.buf = m_tInReadPkt.m_pData;
+
+    // OUT Read packet is handled by Tun FD. So ETHERNET_READ_SIZE is the read size
+    clearPkt(m_tOutReadPkt);
+    m_tOutReadPkt.m_pData = new char[ETHERNET_READ_SIZE];
+    memset(m_tOutReadPkt.m_pData, 0, ETHERNET_READ_SIZE);
+
+    srcAddrSize        = sizeof(srcAddr); // Cannot be allocated on the stack frame. Needs to be accessible always
+    int tapReadSize    = ETHERNET_READ_SIZE;
+    int listenReadSize = LISTEN_READ_SIZE;
+    wsaBuf.len = listenReadSize;
+
+    // Equivalent of the *NIX select loop
     if (!ReadFileEx(m_hTunFd,
       m_tOutReadPkt.m_pData,
-      ETHERNET_READ_SIZE,
+      tapReadSize,
       &tunOverlapped,
       TapReadCallback))
     {
-      eprintf("ReadFileEx failed! Tun manager probably wont work!\n");
+      eprintf("ReadFileEx failed with %d! Tun manager probably wont work!\n", GetLastError());
     }
-    else if (!WSARecvFrom(m_sListenFd,
-      &wsaBuf,
-      LISTEN_READ_SIZE,
-      NULL,
-      0,
-      (SOCKADDR*)&srcAddr,
-      &srcAddrSize,
-      (LPWSAOVERLAPPED)&listenOverlapped, // OVERLAPPED and WSAOVERLAPPED are compatible
-      ListenFdReadCallback))
+    else if (WSARecvFrom(m_sListenFd,   // Socket
+      &wsaBuf,                    // Buffer
+      1,                          // Number of buffers
+      NULL,                       // Number of bytes received irrelevant since Overlapped I/O
+      0,                          // Flags
+      (SOCKADDR*)&srcAddr,        // Source address
+      &srcAddrSize,               // size of the src addr structure
+      (LPWSAOVERLAPPED)&listenOverlapped, // OVERLAPPED structure and WSAOVERLAPPED are compatible
+      ListenFdReadCallback))      // Callback
     {
-      eprintf("WsaRecvFrom failed. Tun manager wont work!\n");
+      eprintf("WsaRecvFrom failed with %d! Tun manager wont work!\n", GetLastError());
     }
     else
     {
@@ -315,7 +328,6 @@ bool TunnelMgr::listen()
       }
     }
   }
-  WSACleanup();
   return true;
 }
 
@@ -325,81 +337,86 @@ bool TunnelMgr::listen()
 // As with the Linux code (Eric's code), assumed that Ethernet frame is read in 1 call to ReadFileEx()!
 VOID WINAPI TunnelMgr::tapReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap)
 {
+  assert (cbBytesRead <= ETHERNET_READ_SIZE);
   // Part 1. Read Frame from TAP device
-  bool bPart1Success = false;
-  bool bReentrantRead = false;
-  if (0 != m_tOutReadPkt.m_uOffset) // If this is the first time the packet was read
+  if (0)
   {
-    bReentrantRead = true;
-    m_tOutReadPkt.m_bComplete = false; // false always
+  eprintf("Grabbed a frame of size %d for %x.%x.%x.%x.%x.%x\n",
+    cbBytesRead, m_tOutReadPkt.m_pData[6], m_tOutReadPkt.m_pData[7], m_tOutReadPkt.m_pData[8],
+    m_tOutReadPkt.m_pData[9], m_tOutReadPkt.m_pData[10], m_tOutReadPkt.m_pData[11]);
+  }
+  bool bPart1Success = false;
+  m_tOutReadPkt.m_bComplete = false; // false always
 
-    if (0 != dwErr) // error
+  if (0 != dwErr) // error
+  {
+    eprintf("Did not read TAP frame");
+  }
+  else
+  {
+    // TODO: call GetOverlappedResult and call GetLastError
+    DWORD dwBytesRead;
+    if (GetOverlappedResult(m_hTunFd, lpOverLap, &dwBytesRead, FALSE))
     {
-      dprintf("Did not read TAP frame");
-      delete[] m_tOutReadPkt.m_pData;
-    }
-    else
-    {
-      // TODO: call GetOverlappedResult and call GetLastError
-      DWORD dwBytesRead;
-      if (GetOverlappedResult(m_hTunFd, lpOverLap, &dwBytesRead, FALSE))
+      DWORD dwOtherError = GetLastError(); // Make sure there was no other error
+      if (ERROR_SUCCESS == dwOtherError)   // success :-/
       {
-        DWORD dwOtherError = GetLastError(); // Make sure there was no other error
-        if (ERROR_SUCCESS == dwOtherError)   // success :-/
-        {
-          m_tOutReadPkt.m_uOffset   += cbBytesRead;
-          m_tOutReadPkt.m_uSize      = cbBytesRead;
-          m_tOutReadPkt.m_bComplete  = true;
+        m_tOutReadPkt.m_uOffset   += cbBytesRead;
+        m_tOutReadPkt.m_uSize      = cbBytesRead;
+        m_tOutReadPkt.m_bComplete  = true;
 
-          bPart1Success = true;
-          if (!handleFrame(m_tOutReadPkt))
-          {
-            eprintf("Unable to handle new frame.\n");
-            bPart1Success = false;
-          }
-        }
-        else
+        bPart1Success = true;
+        if (!handleFrame(m_tOutReadPkt))
         {
-          dprintf("Other error with read : %d\n", dwOtherError);
+          eprintf("Unable to handle new frame.\n");
+          bPart1Success = false;
         }
       }
-    }
-
-    // Part 2. Write the frame to the Listen FD
-    // We have read the frame successfully and made it an IP packet via handleFrame. So now send it on ListenFD!
-    if (bPart1Success && m_tOutReadPkt.m_bComplete)
-    {
-      while (NULL != m_tOutReadPkt.m_pData)
+      else
       {
-        // Attempt to send packet till fwdOut fails
-        if (!fwdOut(m_tOutReadPkt))
-        {
-          eprintf("Unable to fwdOut()\n");
-          break;
-        }
+        eprintf("Other error with read : %d\n", dwOtherError);
       }
     }
-    else
-    { 
-      eprintf("win_tun_mgr: part 1 failed. Not forwarding out!\n");
+  }
+
+  // Part 2. Write the frame to the Listen FD
+  // We have read the frame successfully and made it an IP packet via handleFrame. So now send it on ListenFD!
+  if (bPart1Success)
+  {
+    while (NULL != m_tOutReadPkt.m_pData)
+    {
+      // Attempt to send packet till fwdOut fails
+      if (!fwdOut(m_tOutReadPkt))
+      {
+        // Packet will always be destroyed when fwdOut ends - either failure or success.
+        eprintf("Unable to fwdOut()\n");
+        break;
+      } 
     }
+  }
+  else
+  { 
+    eprintf("win_tun_mgr: part 1 failed. Not forwarding out!\n");
+  }
 
-    // Clear up the packet after attempted reads and/or sends.
-    destroyPkt(m_tOutReadPkt);
-    memset(&tunOverlapped, 0, sizeof(tunOverlapped));  // important to set to 0
-    memset(&m_tOutReadPkt, 0, sizeof(m_tOutReadPkt));
+  assert (m_tOutReadPkt.m_pData != NULL); // Packet should have been destroyed
+  memset(&tunOverlapped, 0, sizeof(tunOverlapped));  // important to set to 0
+  m_tOutReadPkt.m_pData = new char[ETHERNET_READ_SIZE];
+  assert (m_tOutReadPkt.m_pData);
 
-    // Call the next ReadFileEx.
-    m_tOutReadPkt.m_pData = new char[ETHERNET_READ_SIZE];
-    TunnelMgr &tmInstance = TunnelMgr::getInstance();
-    ReadFileEx(m_hTunFd,
-      m_tOutReadPkt.m_pData,
-      ETHERNET_READ_SIZE,
-      &tunOverlapped,
-      TapReadCallback);
+  // Call the next ReadFileEx.
+  if (!ReadFileEx(m_hTunFd,
+    m_tOutReadPkt.m_pData,
+    ETHERNET_READ_SIZE,
+    &tunOverlapped,
+    TapReadCallback))
+  {
+    eprintf("ReadFileEx() failed with %d. Aborting.\n", GetLastError());
+    abort();
   }
 }
 
+// Re-entrant style packet reading
 VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap)
 {
   bool bReentrantRead = false;
@@ -408,28 +425,29 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
   if (ERROR_SUCCESS != dwErr)
   {
     struct ip *pIpHdr = (struct ip*) m_tInReadPkt.m_pData; // buffer passed to this callback
-    
 
     // If offset is 0, this is the first time we are reading data
     if (0 == m_tInReadPkt.m_uOffset)
     {
-      // Get at least the IP header 
+      // Did we get at least the IP header?
+      // Since this is the first read, its enough to just check the num bytes read
       if (cbBytesRead >= (int)sizeof(struct ip))
       {
-        //TODO: IP/Port
         m_tInReadPkt.m_uIP = ntohl(srcAddr.sin_addr.s_addr);
         m_tInReadPkt.m_uPort = ntohs(srcAddr.sin_port);
-
-        m_tInReadPkt.m_uOffset = cbBytesRead;
-        m_tInReadPkt.m_uSize   = ntohs(pIpHdr->ip_len);
-        dprintf("readpkt offset:%u\n", (unsigned int)m_tInReadPkt.m_uOffset);
-        dprintf("readpkt size:%u\n", (unsigned int)m_tInReadPkt.m_uSize);
         {
           char szIP[16];
           net_itoa(m_tInReadPkt.m_uIP, szIP);
-          dprintf("readpkt IP:%s Port:%u\n", szIP, m_tInReadPkt.m_uPort);		
+          eprintf("readpkt IP:%s Port:%u\n", szIP, m_tInReadPkt.m_uPort);		
         }
 
+        m_tInReadPkt.m_uOffset = cbBytesRead;
+        m_tInReadPkt.m_uSize   = ntohs(pIpHdr->ip_len);
+        {
+          eprintf("readpkt offset:%u\n", (unsigned int)m_tInReadPkt.m_uOffset);
+          eprintf("readpkt size:%u\n",   (unsigned int)m_tInReadPkt.m_uSize);
+        }
+  
         // Did we get the whole packet
         if (cbBytesRead >= pIpHdr->ip_len)
         {
@@ -441,35 +459,13 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
             bSuccess = false;
           }
         }
-        // We didn't get the whole packet. So issue a read call :-/
-        else
-        {
-          int srcAddrSize = sizeof(srcAddr);
-          if (!WSARecvFrom(m_sListenFd,
-            &wsaBuf,
-            LISTEN_READ_SIZE,
-            NULL,
-            0,
-            (SOCKADDR*)&srcAddr,
-            &srcAddrSize,
-            (LPWSAOVERLAPPED)&listenOverlapped,
-            ListenFdReadCallback))
-          {
-            dprintf("WSARecvFrom failed with error code %d. Tun manager might not work\n", GetLastError());
-            bSuccess = false;
-          }
-          else
-          {
-            bSuccess = true;
-          }
-        }
       }
       else
       {
         bSuccess = false;
       }
     }
-    // Something was screwed up last read. Check it out
+    // We got a partial packet. This is the rest of the packet
     else
     {
       m_tInReadPkt.m_uOffset += cbBytesRead;
@@ -483,7 +479,8 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
      * Try handling and sending the packet to the TUN device
      * Packet read completed. Now convert to frame and send to TAP device
      */
-    if (m_tInReadPkt.m_bComplete && bSuccess)
+    // Successful and complete read
+    if (bSuccess && m_tInReadPkt.m_bComplete)
     {
       // Replace the IP and set it up with a local IP address on the TUN device
       if (!replaceIp(m_tInReadPkt))
@@ -497,48 +494,72 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
         eprintf("Packet conversion to frame failed!\n");
         bSuccess = false;
       }
-      // TAP device packet set up. Now send it
-      int writtenSoFar = 0;
-      while(1)
+      else
       {
-        DWORD dwWritten;
-        OVERLAPPED stOverlapped;
-        memset(&stOverlapped, 0, sizeof(stOverlapped));
-        if (WriteFile(m_hTunFd, m_tInReadPkt.m_pData, m_tInReadPkt.m_uSize, &dwWritten, &stOverlapped))
+        // TAP device packet set up. Now send it
+        int writtenSoFar = 0;
+        while(1)
         {
-          writtenSoFar += dwWritten;
-          if (writtenSoFar == m_tInReadPkt.m_uSize)
+          if (!writePkt(m_hTunFd, m_tInReadPkt, true))
           {
+            bSuccess = false;
             break;
           }
-        }
-        else
-        {
-          dprintf("Error with sending data to TUN device %d\n", GetLastError());
-          bSuccess = false;
-          break;
+          else
+          {
+            if (0 == m_tInReadPkt.m_uOffset)
+            {
+              bSuccess = true;
+              break;
+            }
+          }
         }
       }
     }
-
-    // Deleted if read was completed, or we failed altogether
-    if (m_tInReadPkt.m_bComplete || !bSuccess)
-    {
-      // Do we need to destroy the packet?
-      //destroyPkt(m_tInReadPkt);
-      memset(&m_tInReadPkt, 0, sizeof(m_tInReadPkt));
-    }
   }
+  // Some error; drop the packet
   else
   {
-    dprintf("listenReadCompleteRoutine: error %d\n", dwErr);
+    dprintf("listenReadCompleteRoutine: error %d/%d\n", dwErr, GetLastError());
+  }
+
+  // Full packet not received, and (partial) read was successful:  Read whatever remains
+  if (!m_tInReadPkt.m_bComplete && bSuccess)
+  {
+    wsaBuf.len = m_tInReadPkt.m_uSize - m_tInReadPkt.m_uOffset; // amount to read
+    wsaBuf.buf = &m_tInReadPkt.m_pData[m_tInReadPkt.m_uOffset];
+  }
+  // Full packet received AND/OR Failed receive/forward: Destroy all evidence and re-create
+  else
+  {
+    destroyPkt(m_tInReadPkt);
+    wsaBuf.len           = LISTEN_READ_SIZE;  // amount to read is passed in this structure
+    m_tInReadPkt.m_pData = new char[LISTEN_READ_SIZE];
+    wsaBuf.buf           = m_tInReadPkt.m_pData;
   }
   memset(&srcAddr, 0, sizeof(srcAddr));
+  memset(&listenOverlapped, 0, sizeof(listenOverlapped));
+  wsaBuf.buf = m_tInReadPkt.m_pData;
+
+  if (!WSARecvFrom(m_sListenFd,   // Socket
+      &wsaBuf,                    // Buffer
+      1,                          // Number of buffers
+      NULL,                       // Number of bytes received irrelevant since Overlapped I/O
+      0,                          // Flags
+      (SOCKADDR*)&srcAddr,        // Source address
+      &srcAddrSize,               // size of the src addr structure
+      (LPWSAOVERLAPPED)&listenOverlapped, // OVERLAPPED structure and WSAOVERLAPPED are compatible
+      ListenFdReadCallback))      // Callback
+  {
+    eprintf("WSARecvFrom failed with %d\n", GetLastError());
+    abort();
+  }
 }
 
 // OVERLAPPED_COMPLETION_ROUTINE
 VOID WINAPI TapReadCallback(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap)
 {
+  dprintf("tap Called!!\n");
   TunnelMgr &tmInstance = TunnelMgr::getInstance();
   tmInstance.tapReadCompletedRoutine(dwErr, cbBytesRead, lpOverLap);
 }
@@ -546,6 +567,7 @@ VOID WINAPI TapReadCallback(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverL
 // WSAOVERLAPPED_COMPLETION_ROUTINE
 VOID WINAPI ListenFdReadCallback(DWORD dwErr, DWORD cbBytesRead, LPWSAOVERLAPPED lpOverLap, DWORD dwFlags)
 {
+  dprintf("listen Called!!\n");
   TunnelMgr &tmInstance = TunnelMgr::getInstance();
   tmInstance.listenReadCompletedRoutine(dwErr, cbBytesRead, lpOverLap);
 }

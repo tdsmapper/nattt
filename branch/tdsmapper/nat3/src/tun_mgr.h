@@ -61,8 +61,7 @@ class TunnelMgr
 //#endif
 /* For Windows tunnel manager only */
 #ifdef _MSC_VER
-    OVERLAPPED tunOverlapped;
-    WSAOVERLAPPED listenOverlapped;
+    int srcAddrSize;
     struct sockaddr_in srcAddr;
     WSABUF wsaBuf;
 #endif
@@ -71,7 +70,6 @@ class TunnelMgr
   private:
     TunnelMgr(const TunnelMgr& rhs);
     TunnelMgr& operator=(const TunnelMgr& rhs);
-
 
   public:
     TunnelMgr();
@@ -139,6 +137,7 @@ class TunnelMgr
                               char *p_pOutBuffer,
                               size_t p_uSize);
     static bool destroyPkt(tun_pkt_t &p_tPkt);
+    static void clearPkt(tun_pkt_t &p_tPkt);
 
     // needs to have access to mapping creation
     friend class DnsQuery;

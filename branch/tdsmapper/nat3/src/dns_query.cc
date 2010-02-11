@@ -59,7 +59,7 @@ void DnsQuery::add_response(DnsPacket &p)
   // forward along NOERROR packets
   // Some DNS server implementations return a NOERROR for a subdomain if they are the auth domain holder.
   // Therefore, also check out the answer count is greater than zero.
-  if (h.rcode() == DNS_NOERROR && h.an_count() > 0)
+  if ((h.rcode() == DNS_NOERROR) && (h.an_count() > 0))
   {
     DnsNAT3 *nat3_rr;
 

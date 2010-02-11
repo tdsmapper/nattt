@@ -71,8 +71,8 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
   #pragma pack(1)
   struct ip
     {
-      unsigned int ip_hl:4;     /* header length */
-      unsigned int ip_v:4;      /* version */
+      unsigned char ip_hl:4;     /* header length */
+      unsigned char ip_v:4;      /* version */
       uint8_t ip_tos;       /* type of service */
       u_short ip_len;        /* total length */
       u_short ip_id;         /* identification */

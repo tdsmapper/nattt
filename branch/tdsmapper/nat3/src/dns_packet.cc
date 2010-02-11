@@ -27,6 +27,7 @@ DnsPacket::~DnsPacket()
   if (m_header != NULL)
   {
     delete m_header;
+    m_header = NULL;
   }
   clear_vectors();
 }
@@ -75,6 +76,11 @@ u_char *DnsPacket::get_bytes(size_t &size) {
     return ret;
 }
 
+DnsHeader* DnsPacket::getHdr()
+{
+  return m_header;
+}
+
 // parse the packet and see if it's legtimiate
 bool DnsPacket::parse()
 {
@@ -86,12 +92,15 @@ bool DnsPacket::parse()
   bool ok = true;
 
   m_header = new DnsHeader();
+  eprintf("m_header allocated at %x\n", m_header);
+  assert(_CrtCheckMemory());
   if (m_header->init(bytes, size))
   {
+    eprintf("0The header ID is %d\n", m_header->id());
     size_t pos = DnsHeader::SIZE;
 
-    // get all the question RRs
-    for (int i = 0; ok && i < m_header->qd_count(); ++i)
+    //// get all the question RRs
+    for (int i = 0; ok && (i < m_header->qd_count()); ++i)
     {
       DnsRR *new_rr = DnsRR::parse(bytes, size, pos, true);
       if (new_rr != NULL)
@@ -127,7 +136,7 @@ bool DnsPacket::parse()
       if (new_rr != NULL)
         m_ar.push_back(new_rr);
       else
-        ok = false;
+        ok = false; 
     }
 
     if (pos != size)
@@ -135,18 +144,23 @@ bool DnsPacket::parse()
 
     if (ok)
       m_parsed = true;
+      
   }
   else
   {
     m_parsed = false;
   }
-
+  
   if (!ok) {
-    clear_vectors();
+    clear_vectors(); 
     m_parsed = false;
   }
-
+  eprintf("1The header ID is %d\n", m_header->id());
   return m_parsed;
+}
+
+DnsHeader& DnsPacket::header(void) {
+  return *m_header;
 }
 
 const vector<DnsRR *> &DnsPacket::questions(void)

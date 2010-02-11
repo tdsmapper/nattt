@@ -4,6 +4,7 @@
 #ifdef _MSC_VER
 
 #include <errno.h>
+#include <stdio.h>
 
 #include "types.h"
 #include "functions.h"
@@ -13,9 +14,9 @@ int pthread_mutex_init(pthread_mutex_t *mutex,
     const pthread_mutexattr_t *attr)
 {
 	int ret = -1;
-	if (attr != NULL)
+	if (attr == NULL)
 	{
-		pthread_mutex_t tMutex = CreateMutex(NULL, NULL, NULL);
+    pthread_mutex_t tMutex = CreateMutex(NULL, FALSE, NULL);
 		if (tMutex != NULL)
 		{
 			ret = 0;

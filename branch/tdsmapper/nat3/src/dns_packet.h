@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "datatypes.h"
+#include "dns_header.h"
 
 class DnsRR;
 class DnsHeader;
@@ -20,10 +21,10 @@ class DnsPacket
     // get wire representation
     void to_wire(vector<u_char> &);
     u_char *get_bytes(size_t &);
-
     bool parse();
+    DnsHeader& header(void);
+    DnsHeader* getHdr();
 
-    inline DnsHeader &header(void) { return *m_header; }
     const std::vector<DnsRR *> &questions(void);
     const std::vector<DnsRR *> &answers(void);
 
@@ -32,12 +33,9 @@ class DnsPacket
 
   private:
     void clear_vectors();
-
     std::vector<unsigned char> m_bytes;
     bool m_parsed;
-
     std::vector<DnsRR *> m_qd, m_an, m_ns, m_ar;
-
     DnsHeader *m_header;
 };
 

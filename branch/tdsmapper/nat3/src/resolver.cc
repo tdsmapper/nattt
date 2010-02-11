@@ -73,14 +73,18 @@ bool Resolver::listen()
 
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = INADDR_ANY;
-    sin.sin_port = htons(DNS_PORT);
+    //sin.sin_port = htons(DNS_PORT);
+    sin.sin_port = htons(101);
 
     // allow the socket to re-bind to the same port
     do {
       int ignore;
       if (setsockopt(m_udp_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&ignore,
             sizeof(ignore)) < 0)
+      {
+        fprintf(stderr, "setsockopt with SO_REUSEADDR failed with error %d\n", GetLastError());
         return false;
+      }
     }
     while(0);
 
@@ -92,6 +96,7 @@ bool Resolver::listen()
     // bind to the port
     if (bind(m_udp_fd, (struct sockaddr *)&sin, sizeof(sin)) == 0)
     {
+      eprintf("PANZER: port %d\n", sin.sin_port);  
       select_loop();
       // this can fall through
     }
@@ -124,7 +129,10 @@ void Resolver::select_loop(void)
 
     /* On Windows, the first parameter to select is ignored. So we can let it use m_udf_fd */
     if (select(m_udp_fd + 1, &rfd, &wfd, &efd, NULL) < 0) // Is the udp fd always higher?
+    {
       err(1, "select");
+      eprintf("Last error was %d\n", GetLastError());
+    }
 
     if (FD_ISSET(m_udp_fd, &efd))
     {
@@ -188,10 +196,13 @@ void Resolver::read_loop(void)
     if ((r = recvfrom(m_udp_fd, (char*)buf, sizeof(buf), 0,
             (struct sockaddr *)&sin, &sz)) > 0)
     {
-      DnsPacket *p = new DnsPacket(r);
+      DnsPacket *p ;
+      p = new DnsPacket(r);
+      assert (_CrtCheckMemory());
       p->add_bytes(buf, r);
       if (p->parse())
       {
+        DnsHeader& h = p->header();
         read_packet(sin, *p);
       }
       else
@@ -217,8 +228,7 @@ void Resolver::read_loop(void)
 
 void Resolver::read_packet(struct sockaddr_in &from, DnsPacket &p)
 {
-  DnsHeader &h = p.header();
-
+  DnsHeader& h = p.header();
   // response packet
   if (h.response())
   {
@@ -273,7 +283,7 @@ uint32_t Resolver::lookup(std::string p_sName)
 
 TunnelEntry &Resolver::getMapping(TunnelEntry &p_oCandidateEnt)
 {
-  // Placeholder so it compoiles
+  // Placeholder so it compiles
   TunnelEntry *pEnt = new TunnelEntry();
   return *pEnt;
 }
@@ -288,8 +298,8 @@ void Resolver::write_packet(struct sockaddr_in &dst, DnsPacket &p)
 void Resolver::write_packet(struct sockaddr_in &dst, u_char *b, size_t len)
 {
   bool sent = false;
+  //printf("trying to send to %x:%d\n", dst.sin_addr.s_addr, ntohs(dst.sin_port));
 
-printf("sent to %x\n", dst.sin_addr.s_addr);
   // attempt to write the packet if the queue is empty
   if (m_send_q.empty())
   {
@@ -310,6 +320,7 @@ bool Resolver::try_send(struct sockaddr_in &dst, u_char *b, size_t len)
     w = sendto(m_udp_fd, (char*)b, len, 0, (struct sockaddr *)&dst, sizeof(dst));
     if (w > 0)
     {
+      printf("sent to %x:%d\n", dst.sin_addr.s_addr, ntohs(dst.sin_port));
       delete [] b;
     }
   }
@@ -322,7 +333,8 @@ bool Resolver::try_send(struct sockaddr_in &dst, u_char *b, size_t len)
   }
   if (w < 0 && errno != EAGAIN)
   {
-    printf("error on socket while writing: %s\n", strerror(errno));
+    int errorNum = GetLastError();
+    printf("error on socket while writing: %s/%d\n", strerror(errorNum), errorNum);
     exit(1);
   }
 

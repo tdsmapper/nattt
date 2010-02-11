@@ -29,7 +29,8 @@ using namespace std;
 
 DnsHeader::DnsHeader()
   : m_init(false)
-{
+{ 
+  m_id = -1;
   m_qdcount = m_ancount = m_nscount = m_arcount = 0;
 
   memset(&m_flags, 0, sizeof(m_flags));
@@ -50,6 +51,17 @@ DnsHeader::DnsHeader(bool question, int id)
   m_flags.rd = 1;
 }
 
+bool DnsHeader::response() 
+{
+  return m_flags.response;
+}
+
+rcode_t DnsHeader::rcode()
+{
+  return (rcode_t)m_flags.rcode;
+}
+
+
 bool DnsHeader::init(unsigned char *bytes, size_t size)
 {
   if (size < SIZE)
@@ -61,19 +73,20 @@ bool DnsHeader::init(unsigned char *bytes, size_t size)
     // read various shorts from the header
     header_fmt *h = (header_fmt *)bytes;
     m_id = ntohs(h->id);
+    eprintf("Assigning an id of %d/%d\n", ntohs(h->id), m_id);
     m_qdcount = ntohs(h->qdcount);
     m_ancount = ntohs(h->ancount);
     m_nscount = ntohs(h->nscount);
     m_arcount = ntohs(h->arcount);
+    eprintf("The details are %d,%d,%d,%d\n", m_qdcount, m_ancount, m_nscount, m_arcount);
 
     // copy the flags
     // this doesn't work with a bitfield struct :(
     // memcpy(&m_flags, bytes + 2, sizeof(m_flags));
     unpack_flags(bytes + 2);
-
     m_init = true;
   }
-
+  eprintf("Assigning an id of %d/%d\n", m_id, id());
   return m_init;
 }
 

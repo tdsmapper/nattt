@@ -18,7 +18,6 @@ HANDLE OS_openTapInterface();
 
 /* Windows-only private functions */
 #ifdef _MSC_VER
-
   #define MAX_KEY_LENGTH 255
   #define MAX_VALUE_NAME 16383
   #define TAP_DEV_CLASS TEXT("SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\")

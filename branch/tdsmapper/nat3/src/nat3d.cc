@@ -74,8 +74,8 @@ int resolver_main(uint32_t ip) {
 
 DWORD WINAPI windows_resolver_wrapper(LPVOID lParam)
 {
-	uint32_t *pIp = (uint32_t*)lParam;
-	uint32_t ip = *pIp;
+	uint32_t ip = (uint32_t)lParam;
+	//uint32_t ip = *pIp;
 	return (DWORD)resolver_main(ip);
 }
 
@@ -110,11 +110,10 @@ void* _spawnResolver(ConfigFile &f) //changed from pthread_t
 			NULL,                      // default security attributes
 			0,                         // use default stack size 
 			windows_resolver_wrapper,  // thread function name
-			(LPVOID)&ip,               // argument to thread function 
+			(LPVOID)ip,                // argument to thread function 
 			0,                         // use default creation flags 
 			0);
 #endif
-
 
   return ret;
 }
@@ -157,8 +156,24 @@ int main(int argc, char *argv[])
 
   if (!f.load(config_file)) {
     fprintf(stderr, "Error loading configuration file: %s\n", f.error());
-    return false;
+    return 2;
   }
+
+_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
+
+  /* Windows WSAStartup - before resolver or tun_mgr */
+#ifdef _MSC_VER
+  if (!WSACleanup())
+  {
+    eprintf("Cleanup failed! %d\n", GetLastError());
+  }
+
+  WSADATA wsaData;
+  if (WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR)
+  {
+    eprintf("win_tun_mgr: WSAStartup failed %d!\n", GetLastError());
+  }
+#endif /* _MSC_VER */
     
   uint32_t ip;
   uint16_t port;
@@ -167,11 +182,16 @@ int main(int argc, char *argv[])
   if (_spawnResolver(f) == NULL)
     return 1;
 
-
-
   TunnelMgr &mgr = TunnelMgr::getInstance();
   mgr.init(ip, port);
   mgr.listen();
+
+#ifdef _MSC_VER
+  if (WSACleanup())
+  {
+    eprintf("WSACleanup failed with %d\n", GetLastError());
+  }
+#endif /* _MSC_VER */
 
   return 0;
 }

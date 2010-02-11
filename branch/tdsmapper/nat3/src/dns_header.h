@@ -18,14 +18,14 @@ class DnsHeader
     // size of a DNS header (constant)
     static const size_t SIZE = 12;
 
-    inline int id() { return m_id; }
-    inline int qd_count() { return m_qdcount; }
-    inline int an_count() { return m_ancount; }
-    inline int ns_count() { return m_nscount; }
-    inline int ar_count() { return m_arcount; }
+    inline int DnsHeader::id() { return m_id; }
+    inline int DnsHeader::qd_count() { return m_qdcount; }
+    inline int DnsHeader::an_count() { return m_ancount; }
+    inline int DnsHeader::ns_count() { return m_nscount; } 
+    inline int DnsHeader::ar_count() { return m_arcount; }
 
-    inline bool response() { return m_flags.response; }
-    rcode_t rcode() { return (rcode_t)m_flags.rcode; }
+    bool response();
+    rcode_t rcode();
 
     void to_wire(std::vector<u_char> &);
 
@@ -35,7 +35,10 @@ class DnsHeader
   private:
     bool m_init;
 
-    int m_id, m_qdcount, m_ancount, m_nscount, m_arcount;
+    int m_id, m_qdcount, // Question
+      m_ancount,         // Answer
+      m_nscount,         // Authoritative NS
+      m_arcount;         // Additional records
     struct {
       bool response;
       unsigned opcode;

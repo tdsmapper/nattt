@@ -498,23 +498,23 @@ bool TunnelMgr::fwdOut(tun_pkt_t &p_tPkt)
       // Now set the INNER header's destination IP to the value
       // specified by our tunnel and re-do the checksum.
       tIter++;
-	pIpHdr->ip_src.s_addr = htonl(m_uListenIP);
+      pIpHdr->ip_src.s_addr = htonl(m_uListenIP);
       pIpHdr->ip_dst.s_addr = htonl((*tIter).m_uRemoteIP);
-	pIpHdr->ip_sum = 0;
-	pIpHdr->ip_sum = checksum((uint16_t *) pIpHdr, (pIpHdr->ip_hl)*4);
-{
-	char szIP1[16];
-	char szIP2[16];
-	char szIP3[16];
-	net_itoa(uIP, szIP1);
-	net_itoa(p_tPkt.m_uIP, szIP2);
-	net_itoa((*tIter).m_uRemoteIP, szIP3);
-      dprintf("fwdOut() - Sending packet from local IP: %s to %s:%u -> %s\n",
-              szIP1,
-              szIP2,
-              p_tPkt.m_uPort,
-              szIP3);
-}
+      pIpHdr->ip_sum = 0;
+      pIpHdr->ip_sum = checksum((uint16_t *) pIpHdr, (pIpHdr->ip_hl)*4);
+      {
+        char szIP1[16];
+        char szIP2[16];
+        char szIP3[16];
+        net_itoa(uIP, szIP1);
+        net_itoa(p_tPkt.m_uIP, szIP2);
+        net_itoa((*tIter).m_uRemoteIP, szIP3);
+        dprintf("fwdOut() - Sending packet from local IP: %s to %s:%u -> %s\n",
+          szIP1,
+          szIP2,
+          p_tPkt.m_uPort,
+          szIP3);
+      }
       // Write away...
       if (!writePkt((HANDLE)m_sListenFd, p_tPkt)) // HANDLE for Windows. Will work on Linux
       {
@@ -605,7 +605,6 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
 {
   bool bRet = true;
   int iTemp = 0;
-
   p_tPkt.m_bComplete = false;
 
   // If this is the tun interface it don't speak "paxket".
@@ -613,18 +612,41 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
   {
     // Write wherever we left off.
 #ifdef _MSC_VER
-  OVERLAPPED stOverlap = {0};
-  DWORD dwBytesWritten = 0;
-  if (!WriteFile(p_iFd, &(p_tPkt.m_pData[0]), p_tPkt.m_uOffset, &dwBytesWritten , &stOverlap))
-  {
-    dprintf("WriteFile failed with %d\n", GetLastError());
-  }
-  iTemp = dwBytesWritten;
-#else
-  iTemp = write(p_iFd, &(p_tPkt.m_pData[0]), p_tPkt.m_uOffset);
-          dprintf("writepkt to tun %d bytes\n", iTemp);
-#endif
+    OVERLAPPED stOverlap = {0};
+    DWORD dwBytesWritten = -1;
+    BOOL bWasOverlapped = false;
 
+    if (WriteFile(p_iFd, &p_tPkt.m_pData[p_tPkt.m_uOffset], (p_tPkt.m_uSize - p_tPkt.m_uOffset),
+      &dwBytesWritten, &stOverlap))
+    {
+      eprintf("WriteFile completed!!\n");
+    }
+    // Real error, or just overlapped I/O?
+    else
+    {
+      int lastError = GetLastError();
+      // Not a real error. We're fine
+      if (ERROR_IO_PENDING == lastError)
+      {
+        // So lets wait for the overlapped I/O to complete. Also note that we're overwriting dwBytesWritten
+        if (!GetOverlappedResult(p_iFd, &stOverlap, &dwBytesWritten, TRUE))
+        {
+          bRet = false;
+          dwBytesWritten = -1; // just to be safe :-/
+          eprintf("GetOverlappedResult failed with %d!\n", GetLastError());
+        }
+      }
+      else
+      {
+        dwBytesWritten = -1; 
+        bRet = false;
+      }
+    }
+    iTemp = dwBytesWritten;
+#else
+    iTemp = write(p_iFd, &(p_tPkt.m_pData[0]), p_tPkt.m_uOffset);
+    dprintf("writepkt to tun %d bytes\n", iTemp);
+#endif /* _MSC_VER */
   }
   else
   {
@@ -661,7 +683,6 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     p_tPkt.m_uOffset = 0;
     bRet = true;
   }
-
   return bRet;
 }
 
@@ -869,6 +890,13 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
     {
       struct ip *pIP = (struct ip *) &(p_tPkt.m_pData[sizeof(struct ether_header)]);
       uint16_t uLen = ntohs(pIP->ip_len);
+
+      char srcIP[25];
+      char dstIP[25];
+      net_itoa(ntohl(pIP->ip_dst.S_un.S_addr), dstIP);
+      net_itoa(ntohl(pIP->ip_src.S_un.S_addr), srcIP);
+      eprintf("IP frame from: %s to: %s\n", srcIP, dstIP);
+        
       char *pTmp = new char[uLen];
       memcpy(pTmp, pIP, uLen);
       p_tPkt.m_uSize = uLen;
@@ -1018,4 +1046,14 @@ bool TunnelMgr::destroyPkt(tun_pkt_t &p_tPkt)
   memset(&p_tPkt, 0, sizeof(p_tPkt));
 
   return true;
+}
+
+
+void TunnelMgr::clearPkt(tun_pkt_t &p_tPkt)
+{
+  p_tPkt.m_bComplete = false;
+  p_tPkt.m_uPort     = 0;
+  p_tPkt.m_uSize     = 0;
+  p_tPkt.m_uOffset   = 0;
+  p_tPkt.m_uIP       = 0;
 }
