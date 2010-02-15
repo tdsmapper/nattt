@@ -18,11 +18,11 @@ class DnsHeader
     // size of a DNS header (constant)
     static const size_t SIZE = 12;
 
-    inline int DnsHeader::id() { return m_id; }
-    inline int DnsHeader::qd_count() { return m_qdcount; }
-    inline int DnsHeader::an_count() { return m_ancount; }
-    inline int DnsHeader::ns_count() { return m_nscount; } 
-    inline int DnsHeader::ar_count() { return m_arcount; }
+    inline int id() { return m_id; }
+    inline int qd_count() { return m_qdcount; }
+    inline int an_count() { return m_ancount; }
+    inline int ns_count() { return m_nscount; } 
+    inline int ar_count() { return m_arcount; }
 
     bool response();
     rcode_t rcode();

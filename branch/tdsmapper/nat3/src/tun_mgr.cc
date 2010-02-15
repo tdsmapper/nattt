@@ -871,7 +871,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
         memcpy(&uResponseIP, &(pBuff[TUN_MGR_ARP_TPA]), 4);
         if (((ntohl(uResponseIP) & m_uMask) != m_uLocalNet)
           || ((ntohl(uResponseIP) & ~m_uMask) == 1)) //TODO
-          // Pain in the secret area: Microsoft 
+          // Windows: Do not reply for ARPs to the adapter's IP: That will trigger auto-addressing
         {
           eprintf("Got arp request for unknown IP: %x\n", ntohl(uResponseIP));
           destroyPkt(p_tPkt);
@@ -879,31 +879,46 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
         else
         {
           struct ether_header *pEth = (struct ether_header*)p_tPkt.m_pData;
+
+          // ARP request is a broadcast; ARP reply is a one-to-one packet
           memcpy(pEth->ether_dhost, m_pTapMac, 6);
           memcpy(pEth->ether_shost, m_pTapMac, 6);
 
-          char bcast[6]; // broadcast
-          bcast[0] = 0x00;
-          bcast[1] = 0xff;
-          bcast[2] = 0x1d;
-          bcast[3] = 0x87;
-          bcast[4] = 0x46;
-          bcast[5] = 0x81;
           eprintf(" for IP Address: %x\n", uResponseIP);
-          
-          memcpy(&(pBuff[TUN_MGR_ARP_THA]), pSrcMac, 6);  //TODO
-          //memcpy(&(pBuff[TUN_MGR_ARP_THA]), m_pTapMac, 6);
-          //memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_pTapMac, 6);
-          memcpy(&(pBuff[TUN_MGR_ARP_SHA]), bcast, 6);
+          memcpy(&(pBuff[TUN_MGR_ARP_THA]), pSrcMac, 6);
+
+#ifdef _MSC_VER
+          // Windows: Reply with a MAC address other than the MAC address of the TUN/TAP device
+          memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_uNatNetMac, 6);
+#else
+          // *NIX: Reply with the MAC address of the TUN/TAP device
+          memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_pTapMac, 6);
+#endif
           memcpy(&(pBuff[TUN_MGR_ARP_TPA]), &uSrcIP, 4);
           memcpy(&(pBuff[TUN_MGR_ARP_SPA]), &uResponseIP, 4);
           pArp->ar_op = htons(ARPOP_REPLY);
 
+#ifdef _MSC_VER
           //p_tPkt.m_uOffset = 0; // TODO/XXX
           if (!writePkt(m_hTunFd, p_tPkt, true)) //TODO/XXX
           {
-            abort();
+            eprintf("Packet not written due to %d\n", GetLastError());
           }
+          destroyPkt(p_tPkt);
+#else
+          if (!m_oInboundQueue.enqueue(p_tPkt))
+          {
+            eprintf("Unable to enqueue ARP response.\n");
+            destroyPkt(p_tPkt);
+          }
+          else
+          {
+            memset(&m_tOutReadPkt, 0, sizeof(m_tOutReadPkt));
+            bRet = true;
+          }
++#endif /* _MSC_VER */
+
+#endif
           bRet = true;
 
         }
@@ -916,12 +931,14 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
 
       char srcIP[25];
       char dstIP[25];
+#ifdef _MSC_VER
+      // TODO: Try and unify this.
       net_itoa(ntohl(pIP->ip_dst.S_un.S_addr), dstIP);
       net_itoa(ntohl(pIP->ip_src.S_un.S_addr), srcIP);
-      if (!strcmp(srcIP, "10.254.0.77"))
-      {
-        eprintf("---------------------------------------------");
-      }
+#else
+      net_itoa(ntohl(pIP->ip_dst.s_addr), dstIP);
+      net_itoa(ntohl(pIP->ip_src.s_addr), srcIP);
+#endif
       eprintf("IP frame from: %s to: %s\n", srcIP, dstIP);
         
       char *pTmp = new char[uLen];
@@ -929,6 +946,19 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
       p_tPkt.m_uSize = uLen;
       delete[] p_tPkt.m_pData;
       p_tPkt.m_pData = pTmp;
+
+#ifndef _MSC_VER     // Onl *NIX uses the queue
+      if (!m_oOutboundQueue.enqueue(p_tPkt))
+      {
+        eprintf("Unable to enqueue outbound IP packet.\n");
+        destroyPkt(p_tPkt);
+      }
+      else
+      {
+        memset(&m_tOutReadPkt, 0, sizeof(m_tOutReadPkt));
+        bRet = true;
+      }
+#endif /* _MSC_VER */
 
       bRet = true;
     }

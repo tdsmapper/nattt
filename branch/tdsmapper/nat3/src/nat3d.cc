@@ -13,8 +13,9 @@
 #include "resolver.h"
 #include "tun_mgr.h"
 #include "config_file.h"
-//#include "types.h"
 #include "functions.h"
+
+uint32_t IPADDR;
 
 #if 0
 // shamelessly stolen/adapted from the D
@@ -74,17 +75,14 @@ int resolver_main(uint32_t ip) {
 
 DWORD WINAPI windows_resolver_wrapper(LPVOID lParam)
 {
-	uint32_t ip = (uint32_t)lParam;
-	//uint32_t ip = *pIp;
-	return (DWORD)resolver_main(ip);
+	return (DWORD)resolver_main(IPADDR);
 }
 
 #else
 
 void *linux_bsd_resolver_wrapper(void *arg)
 {
-	uint32_t *ip = (uint32_t *)arg;
-	return (void*)resolver_main(*ip);
+	return (void*)resolver_main(IPADDR);
 }
 
 #endif
@@ -92,14 +90,13 @@ void *linux_bsd_resolver_wrapper(void *arg)
 
 void* _spawnResolver(ConfigFile &f) //changed from pthread_t
 {
-  uint32_t ip;
-  if (!locate_resolver(f, ip))
+  if (!locate_resolver(f, IPADDR))
 	  return NULL;
 
 #ifndef _MSC_VER
   // create and launch the resolver thread
   pthread_t *ret = new pthread_t;
-  if (pthread_create(ret, NULL, linux_bsd_resolver_wrapper, (void *)&ip) != 0) {
+  if (pthread_create(ret, NULL, linux_bsd_resolver_wrapper, NULL) != 0) {
 	  fprintf(stderr, "There was an error creating the resolver thread\n");
 	  delete ret;
 	  ret = NULL;
@@ -110,7 +107,7 @@ void* _spawnResolver(ConfigFile &f) //changed from pthread_t
 			NULL,                      // default security attributes
 			0,                         // use default stack size 
 			windows_resolver_wrapper,  // thread function name
-			(LPVOID)ip,                // argument to thread function 
+			NULL,                // argument to thread function 
 			0,                         // use default creation flags 
 			0);
 #endif

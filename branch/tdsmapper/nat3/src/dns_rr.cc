@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cassert>
 #include <cstring>
 #ifdef _MSC_VER
@@ -12,9 +13,6 @@
 #include "types.h"
 #include "functions.h"
 
-#ifdef DEBUG
-#include <iostream>
-#endif
 
 #define the_force namespace std
 using the_force;

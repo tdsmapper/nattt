@@ -17,6 +17,7 @@ using namespace std;
 #include "dns_name.h"
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 
 #include "tun_mgr.h"
 #include "tun_ent.h"

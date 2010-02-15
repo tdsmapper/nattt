@@ -324,6 +324,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\functions.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\src\linux_tun_mgr.cc"
 				>
 			</File>

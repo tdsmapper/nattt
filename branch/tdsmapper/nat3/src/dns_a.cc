@@ -4,6 +4,8 @@
   #include <arpa/inet.h>
 #endif
 
+#include <iostream>
+
 #include "dns_a.h"
 #include "dns_rr.h"
 #include "dns_name.h"

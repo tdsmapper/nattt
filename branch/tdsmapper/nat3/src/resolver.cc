@@ -78,7 +78,7 @@ bool Resolver::listen()
 
     // allow the socket to re-bind to the same port
     do {
-      int ignore;
+      int ignore = 0;
       if (setsockopt(m_udp_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&ignore,
             sizeof(ignore)) < 0)
       {
@@ -198,11 +198,9 @@ void Resolver::read_loop(void)
     {
       DnsPacket *p ;
       p = new DnsPacket(r);
-      assert (_CrtCheckMemory());
       p->add_bytes(buf, r);
       if (p->parse())
       {
-        DnsHeader& h = p->header();
         read_packet(sin, *p);
       }
       else
@@ -320,7 +318,7 @@ bool Resolver::try_send(struct sockaddr_in &dst, u_char *b, size_t len)
     w = sendto(m_udp_fd, (char*)b, len, 0, (struct sockaddr *)&dst, sizeof(dst));
     if (w > 0)
     {
-      printf("sent to %x:%d\n", dst.sin_addr.s_addr, ntohs(dst.sin_port));
+      eprintf("sent to %x:%d\n", dst.sin_addr.s_addr, ntohs(dst.sin_port));
       delete [] b;
     }
   }
@@ -328,13 +326,13 @@ bool Resolver::try_send(struct sockaddr_in &dst, u_char *b, size_t len)
 
   if (w == 0)
   {
-    printf("socket closed while writing\n");
+    eprintf("socket closed while writing\n");
     exit(1);
   }
   if (w < 0 && errno != EAGAIN)
   {
     int errorNum = GetLastError();
-    printf("error on socket while writing: %s/%d\n", strerror(errorNum), errorNum);
+    eprintf("error on socket while writing: %s/%d\n", strerror(errorNum), errorNum);
     exit(1);
   }
 

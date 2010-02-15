@@ -271,6 +271,13 @@ bool TunnelMgr::configTunInterface(char *p_szDevice)  // p_szDevice is not neede
   // Set the IP address. Defering setting up routing tables. Does not seem to be needed on Windows
   else
   {
+    // Set up a MAC address for any IP within the TUN/TAP's mac address by changing the last 3 octets of the MAC address
+    // TODO: Verify this.
+    srand(time(0));
+    m_uNatNetMac[3] = (rand() % 253) + 1;
+    m_uNatNetMac[4] = (rand() % 253) + 1;
+    m_uNatNetMac[5] = (rand() % 253) + 1;
+
     TCHAR szDevGUID[256];
     char szDevName[256];
 

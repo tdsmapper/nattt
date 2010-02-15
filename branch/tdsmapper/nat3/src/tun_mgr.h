@@ -61,7 +61,8 @@ class TunnelMgr
 //#endif
 /* For Windows tunnel manager only */
 #ifdef _MSC_VER
-
+    // The MAC address to use when replying for ARP from an IP address in the TUN/TAP device's network
+  u_char m_uNatNetMac[6];
 #endif
 
   // Methods
