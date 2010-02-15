@@ -61,9 +61,7 @@ class TunnelMgr
 //#endif
 /* For Windows tunnel manager only */
 #ifdef _MSC_VER
-    int srcAddrSize;
-    struct sockaddr_in srcAddr;
-    WSABUF wsaBuf;
+
 #endif
 
   // Methods

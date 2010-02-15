@@ -442,12 +442,12 @@ bool TunnelMgr::replaceIp(tun_pkt_t &p_tPkt)
   else
   {
     // This new IP will be the "local" src IP of this tunnel.
-dprintf("replaceip original src is %s\n", inet_ntoa(pIpHdr->ip_src));
-dprintf("replaceip original dst is %s\n", inet_ntoa(pIpHdr->ip_dst));
+eprintf("replaceip original src is %s\n", inet_ntoa(pIpHdr->ip_src));
+eprintf("replaceip original dst is %s\n", inet_ntoa(pIpHdr->ip_dst));
     pIpHdr->ip_src.s_addr = htonl(uNewSrcIP);
     pIpHdr->ip_dst.s_addr = htonl(m_uLocalNet + 1);
-dprintf("replace ip new src is %s\n", inet_ntoa(pIpHdr->ip_src));
-dprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
+eprintf("replace ip new src is %s\n", inet_ntoa(pIpHdr->ip_src));
+eprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
 	pIpHdr->ip_sum = 0;
     pIpHdr->ip_sum = checksum((uint16_t *) pIpHdr, (pIpHdr->ip_hl)*4);
     p_tPkt.m_uIP = ntohl(pIpHdr->ip_dst.s_addr);
@@ -509,7 +509,7 @@ bool TunnelMgr::fwdOut(tun_pkt_t &p_tPkt)
         net_itoa(uIP, szIP1);
         net_itoa(p_tPkt.m_uIP, szIP2);
         net_itoa((*tIter).m_uRemoteIP, szIP3);
-        dprintf("fwdOut() - Sending packet from local IP: %s to %s:%u -> %s\n",
+        eprintf("fwdOut() - Sending packet from local IP: %s to %s:%u -> %s\n",
           szIP1,
           szIP2,
           p_tPkt.m_uPort,
@@ -613,13 +613,14 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     // Write wherever we left off.
 #ifdef _MSC_VER
     OVERLAPPED stOverlap = {0};
-    DWORD dwBytesWritten = -1;
+    memset(&stOverlap, 0, sizeof(stOverlap));
+    DWORD dwBytesWritten = 0;
     BOOL bWasOverlapped = false;
 
-    if (WriteFile(p_iFd, &p_tPkt.m_pData[p_tPkt.m_uOffset], (p_tPkt.m_uSize - p_tPkt.m_uOffset),
+    if (WriteFile(p_iFd, &p_tPkt.m_pData[0], (p_tPkt.m_uOffset), // TODO
       &dwBytesWritten, &stOverlap))
     {
-      eprintf("WriteFile completed!!\n");
+      eprintf("WriteFile completed with %d!!\n", dwBytesWritten);
     }
     // Real error, or just overlapped I/O?
     else
@@ -658,10 +659,9 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     tAddr.sin_addr.s_addr = htonl(p_tPkt.m_uIP);
     // Send a tun packet to the other end
     iTemp = sendto((SOCKET)p_iFd, p_tPkt.m_pData, p_tPkt.m_uSize, 0, (struct sockaddr *) &tAddr, sizeof(tAddr));
-    dprintf("Write request to socket %x IP, %d bytes, %s data\n", p_tPkt.m_uIP, p_tPkt.m_uSize, p_tPkt.m_pData);
+    eprintf("Write request to socket %x IP, %d bytes, %s data\n", p_tPkt.m_uIP, p_tPkt.m_uSize, p_tPkt.m_pData);
     dprintf("writepkt to %d socket %d bytes %x ip, %d port\n", p_iFd, iTemp, tAddr.sin_addr.s_addr, tAddr.sin_port);
   }
-
   if (iTemp <= 0
       && EINTR != errno
       && EAGAIN != errno)
@@ -677,7 +677,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
 
   // If we sent it all, then set the state to reflect that it's
   // done.
-  if (p_tPkt.m_uOffset == p_tPkt.m_uSize)
+  if (p_tPkt.m_uOffset >= p_tPkt.m_uSize) // TODO
   {
     p_tPkt.m_bComplete = true;
     p_tPkt.m_uOffset = 0;
@@ -858,7 +858,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
         && 4 == pArp->ar_pln
         && ARPOP_REQUEST == ntohs(pArp->ar_op))
       {
-        dprintf("handling ARP request.\n");
+        eprintf("handling ARP request.\n");
         char *pBuff = (char *) pArp;
         uint32_t uSrcIP = 0;
         uint32_t uResponseIP = 0;
@@ -869,20 +869,43 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
         memcpy(pResponseMac, &(pBuff[TUN_MGR_ARP_THA]), 6);
         memcpy(&uSrcIP, &(pBuff[TUN_MGR_ARP_SPA]), 4);
         memcpy(&uResponseIP, &(pBuff[TUN_MGR_ARP_TPA]), 4);
-        if ((ntohl(uResponseIP) & m_uMask) != m_uLocalNet)
+        if (((ntohl(uResponseIP) & m_uMask) != m_uLocalNet)
+          || ((ntohl(uResponseIP) & ~m_uMask) == 1)) //TODO
+          // Pain in the secret area: Microsoft 
         {
-          dprintf("Got arp request for unknown IP: %x\n", ntohl(uResponseIP));
+          eprintf("Got arp request for unknown IP: %x\n", ntohl(uResponseIP));
           destroyPkt(p_tPkt);
         }
         else
         {
-          memcpy(&(pBuff[TUN_MGR_ARP_THA]), pSrcMac, 6);
-          memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_pTapMac, 6);
+          struct ether_header *pEth = (struct ether_header*)p_tPkt.m_pData;
+          memcpy(pEth->ether_dhost, m_pTapMac, 6);
+          memcpy(pEth->ether_shost, m_pTapMac, 6);
+
+          char bcast[6]; // broadcast
+          bcast[0] = 0x00;
+          bcast[1] = 0xff;
+          bcast[2] = 0x1d;
+          bcast[3] = 0x87;
+          bcast[4] = 0x46;
+          bcast[5] = 0x81;
+          eprintf(" for IP Address: %x\n", uResponseIP);
+          
+          memcpy(&(pBuff[TUN_MGR_ARP_THA]), pSrcMac, 6);  //TODO
+          //memcpy(&(pBuff[TUN_MGR_ARP_THA]), m_pTapMac, 6);
+          //memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_pTapMac, 6);
+          memcpy(&(pBuff[TUN_MGR_ARP_SHA]), bcast, 6);
           memcpy(&(pBuff[TUN_MGR_ARP_TPA]), &uSrcIP, 4);
           memcpy(&(pBuff[TUN_MGR_ARP_SPA]), &uResponseIP, 4);
           pArp->ar_op = htons(ARPOP_REPLY);
 
+          //p_tPkt.m_uOffset = 0; // TODO/XXX
+          if (!writePkt(m_hTunFd, p_tPkt, true)) //TODO/XXX
+          {
+            abort();
+          }
           bRet = true;
+
         }
       }
     }
@@ -895,6 +918,10 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
       char dstIP[25];
       net_itoa(ntohl(pIP->ip_dst.S_un.S_addr), dstIP);
       net_itoa(ntohl(pIP->ip_src.S_un.S_addr), srcIP);
+      if (!strcmp(srcIP, "10.254.0.77"))
+      {
+        eprintf("---------------------------------------------");
+      }
       eprintf("IP frame from: %s to: %s\n", srcIP, dstIP);
         
       char *pTmp = new char[uLen];
@@ -907,7 +934,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
     }
     else
     {
-      eprintf("Unknown ethertype: %x\n", ntohs(pEth->ether_type));
+      //eprintf("Unknown ethertype: %x\n", ntohs(pEth->ether_type)); // COMM
       bRet = false;
       destroyPkt(p_tPkt);
     }
