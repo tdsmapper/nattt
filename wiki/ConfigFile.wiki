@@ -33,7 +33,7 @@ The command to get the ip address of the interfaces is _ifconfig_ on Linux/UNIX/
 
 On Windows, finding your IP address typically involves right-clicking the network connection icon in the tray (near the date), choosing properties, and one of options from there (depending on your specific Windows OS).
 
-_*Please do no enter 127.0.0.1 for the address of the client.*_
+_*Please do not enter 127.0.0.1 for the address of the interface.*_
 
 Example: ip = 70.23.223.12
 
