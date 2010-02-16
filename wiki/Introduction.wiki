@@ -2,7 +2,7 @@
 
 = List of pages =
 
-
+  * [http://www.cs.arizona.edu/~bzhang/nat/nattt.htm Details webpage]
   * [Installation Installation]
   * [RunningNATTT Running NATTT]
   * [ResolverSetup Resolver Setup]
