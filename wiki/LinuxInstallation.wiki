@@ -1,0 +1,9 @@
+#summary Installation of NATTT on Linux
+#labels Phase-Deploy
+
+= Additional software/drivers =
+  * None. The TUN/TAP driver should be installed on most modern Linux operating systems. In case it is not present, please find it [http://vtun.sourceforge.net/tun/index.html here].
+
+= Details =
+
+  * Installing NATTT on Linux is like installing any other application from source (_./configure, make, make install_).
