@@ -1,0 +1,10 @@
+#summary One-sentence summary of this page.
+#labels Phase-Deploy
+
+= Installation =
+
+Please choose your operating system from below:
+
+1. Windows 2000 or later
+2. Mac OS X/UNIX
+3. Linux
