@@ -1,13 +1,12 @@
 #summary Installation of NATTT on UNIX/Mac OS X
+#labels Phase-Deploy
 
-= Introduction =
+= Additional Software/Drivers =
 
-Installation of NATTT on Mac OS X requires the [http://tuntaposx.sourceforge.net/download.xhtml TUN/TAP driver].
+  * Installation of NATTT on Mac OS X requires the [http://tuntaposx.sourceforge.net/download.xhtml TUN/TAP driver].
+  * Installation of the TUN/TAP driver is similar to installing any other program on the Mac OS X
 
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+  * Installing NATTT on Linux is like installing any other application from source (./configure, make, make install). 
