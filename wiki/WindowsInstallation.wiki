@@ -1,8 +1,10 @@
-#summary One-sentence summary of this page.
+#summary Installation of NATTT on Windows
 
 = Introduction =
 
-Add your content here.
+Installation on Windows requires 2 major steps:
+  # Installation of TUN/TAP driver from OpenVPN
+  # Disabling the firewall from blocking traffic on the TUN/TAP Device
 
 
 = Details =
