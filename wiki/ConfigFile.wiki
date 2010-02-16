@@ -42,3 +42,15 @@ Example: ip = 70.23.223.12
 The port number is the port number on which NATTT listens for incoming tunnel packets. Please note that you need to forward the port from the NAT box to the server installation of NATTT for the application to work. For more details on how to forward the port, visit [http://www.portforward.com/ Port Forward].
 
 Example: port = 100
+
+== Sample config file ==
+
+*Server:* (behind a NAT box)
+ip = 10.0.0.22
+resolver = 10.0.0.2
+port = 101
+
+*Client:*
+ip = 150.x.x.x
+resolver = 150.x.x.x
+port = 101
