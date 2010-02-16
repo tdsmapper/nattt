@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cassert>
 #include <vector>
 #ifdef _MSC_VER
@@ -11,7 +12,6 @@
 #include "functions.h"
 #include <string.h>
 
-#include <iostream>
 #include <stdlib.h>
 
 using namespace std;

@@ -17,7 +17,7 @@
 #define snprintf(A,...) _snprintf(A, __VA_ARGS__)
 #else
 #define snprintf(A,...) snprintf(A, __VA_ARGS__)
-
+int GetLastError();
 #endif /* _MSC_VER */
 
 #define err(value,cmdname) eprintf(cmdname " - err value is %d\n", value)

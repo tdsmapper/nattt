@@ -659,7 +659,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     tAddr.sin_addr.s_addr = htonl(p_tPkt.m_uIP);
     // Send a tun packet to the other end
     iTemp = sendto((SOCKET)p_iFd, p_tPkt.m_pData, p_tPkt.m_uSize, 0, (struct sockaddr *) &tAddr, sizeof(tAddr));
-    eprintf("Write request to socket %x IP, %d bytes, %s data\n", p_tPkt.m_uIP, p_tPkt.m_uSize, p_tPkt.m_pData);
+    eprintf("Write request to socket %x IP, %d bytes, %s data\n", p_tPkt.m_uIP, (int)p_tPkt.m_uSize, p_tPkt.m_pData);
     dprintf("writepkt to %d socket %d bytes %x ip, %d port\n", p_iFd, iTemp, tAddr.sin_addr.s_addr, tAddr.sin_port);
   }
   if (iTemp <= 0
@@ -893,7 +893,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
 #else
           // *NIX: Reply with the MAC address of the TUN/TAP device
           memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_pTapMac, 6);
-#endif
+#endif /* _MSC_VER */
           memcpy(&(pBuff[TUN_MGR_ARP_TPA]), &uSrcIP, 4);
           memcpy(&(pBuff[TUN_MGR_ARP_SPA]), &uResponseIP, 4);
           pArp->ar_op = htons(ARPOP_REPLY);
@@ -916,9 +916,8 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
             memset(&m_tOutReadPkt, 0, sizeof(m_tOutReadPkt));
             bRet = true;
           }
-+#endif /* _MSC_VER */
+#endif /* _MSC_VER */
 
-#endif
           bRet = true;
 
         }
@@ -964,7 +963,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
     }
     else
     {
-      //eprintf("Unknown ethertype: %x\n", ntohs(pEth->ether_type)); // COMM
+      eprintf("Unknown ethertype: %x\n", ntohs(pEth->ether_type)); // COMM
       bRet = false;
       destroyPkt(p_tPkt);
     }

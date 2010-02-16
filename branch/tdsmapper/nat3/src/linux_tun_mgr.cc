@@ -337,17 +337,10 @@ bool TunnelMgr::listen()
           // If we have the whole packet...
           if (m_tOutReadPkt.m_bComplete)
           {
-            if (handleFrame(m_tOutReadPkt)) // handleFrame changed to not enqueue
-            {
-              if (!m_oOutboundQueue.enqueue(m_tOutReadPkt))
-              {
-                eprintf("Unable to enqueue outbound IP packet.\n");
-                destroyPkt(m_tOutReadPkt);
-              }
-            }
-            else
+            if (!handleFrame(m_tOutReadPkt)) // handleFrame changed to not enqueue
             {
               eprintf("Unable to handle new frame.\n");
+              destroyPkt(m_tOutReadPkt);
             }
             // When we're done, clear the structure out, but don't free its mem (that
             // is in the queue now).

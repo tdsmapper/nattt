@@ -92,8 +92,6 @@ bool DnsPacket::parse()
   bool ok = true;
 
   m_header = new DnsHeader();
-  eprintf("m_header allocated at %x\n", m_header);
-  assert(_CrtCheckMemory());
   if (m_header->init(bytes, size))
   {
     eprintf("0The header ID is %d\n", m_header->id());

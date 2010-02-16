@@ -156,8 +156,6 @@ int main(int argc, char *argv[])
     return 2;
   }
 
-_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
-
   /* Windows WSAStartup - before resolver or tun_mgr */
 #ifdef _MSC_VER
   if (!WSACleanup())
