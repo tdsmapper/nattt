@@ -1,16 +1,10 @@
 #summary Introduction to NATTT
 
-= Introduction =
+= List of pages =
 
-Add your content here.
 
   * [Installation Installation]
   * [RunningNATTT Running NATTT]
   * [ResolverSetup Resolver Setup]
 
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+[Errors Errors] faced with NAT3D.
