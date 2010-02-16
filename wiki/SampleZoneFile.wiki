@@ -53,6 +53,7 @@ zone "nattt" {
 }}}
 
 === zones/nattt.db ===
+{{{
 $TTL 1
 nattt.      IN      SOA     localhost. localhost. (
       2006081401
@@ -63,3 +64,4 @@ nattt.      IN      SOA     localhost. localhost. (
       )
 nattt. NS 127.0.0.1
 b.nattt. IN TYPE65324 \# 10 55 b0 22 63 00 67 0a 00 00 11
+}}}
