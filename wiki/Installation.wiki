@@ -5,6 +5,6 @@
 
 Please choose your operating system from below:
 
-# [Windows 2000 or later Windows-Installation]
-# [Mac OS X/UNIX OSX-Installation
-# [Linux Linux-Installation]
+# [Windows-Installation Windows 2000 or later]
+# [OSX-Installation Mac OS X/UNIX]
+# [Linux-Installation Linux]
