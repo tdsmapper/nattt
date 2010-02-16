@@ -10,4 +10,4 @@
 = Details =
 
   * Installing NATTT on Linux is like installing any other application from source (./configure, make, make install). 
-  * To install the application, you would need [Mac Developer tools http://developer.apple.com/products/membership.html]. The free membership will do.
+  * To install the application, you would need [http://developer.apple.com/products/membership.html Mac Developer tools]. The free membership will do.
