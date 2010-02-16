@@ -15,12 +15,11 @@ _option_ = _value_
 
 = Explanation of options =
 
-  # DNS Resolver address (option: _resolver_):
-  The address of the DNS resolver is the address of the DNS database that contains details about the remote servers you want to reach. Example: resolver = 127.0.0.1
+== DNS Resolver address (option: _resolver_) ==
+The address of the DNS resolver is the address of the DNS database that contains details about the remote servers you want to reach. Example: resolver = 127.0.0.1
 
-  # IP Address of the interface on which to listen (option: _ip_):
-  The IP address of the network interface on which to listen for incoming tunneled packets. If you have multiple interfaces, the meanings differ for both the client and the server.
+== IP Address of the interface on which to listen (option: _ip_) ==
+The IP address of the network interface on which to listen for incoming tunneled packets. If you have multiple interfaces, the meanings differ for both the client and the server.
 
 Client:
-
   # Port number on which to listen (option: _port_):
