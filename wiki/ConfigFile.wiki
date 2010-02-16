@@ -16,10 +16,27 @@ _option_ = _value_
 = Explanation of options =
 
 == DNS Resolver address (option: _resolver_) ==
-The address of the DNS resolver is the address of the DNS database that contains details about the remote servers you want to reach. Example: resolver = 127.0.0.1
+The address of the DNS resolver is the address of the DNS database that contains details about the remote servers you want to reach.
+
+To set up a resolver, see [ResolverSetup instructions].
+
+Example: resolver = 127.0.0.1
+
 
 == IP Address of the interface on which to listen (option: _ip_) ==
 The IP address of the network interface on which to listen for incoming tunneled packets. If you have multiple interfaces, the meanings differ for both the client and the server.
 
-Client:
-  # Port number on which to listen (option: _port_):
+*Client:*
+Address of interface on which you expect incoming packets to arrive. For a common machine, you probably have 2 interfaces - an Ethernet and a Wireless-LAN. Enter the address of the interface which is connected to the Internet.
+
+The command to get the ip address of the interfaces is _ifconfig_ on Linux/UNIX/Mac OS X. The interfaces are typically named "eth0/1.." for Ethernet and "wlan0/1.." or "en0/1.." on the Mac.
+
+On Windows, finding your IP address typically involves right-clicking the network connection icon in the tray (near the date), choosing properties, and one of options from there (depending on your specific Windows OS).
+
+_*Please do no enter 127.0.0.1 for the address of the client.*_
+
+Example: ip = 70.23.223.12
+
+== Port number on which to listen (option: _port_) ==
+
+The port number is the port number on which NATTT listens for incoming tunnel packets. Please note that you need to forward the port from the NAT box to the server installation of NATTT for the application to work. For more details on how to forward the port, visit [http://www.portforward.com/ Port Forward].
