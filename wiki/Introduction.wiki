@@ -4,9 +4,9 @@
 
 Add your content here.
 
-[Installation Installation]
-[RunningNATTT Running NATTT]
-[ResolverSetup Resolver Setup]
+  * [Installation Installation]
+  * [RunningNATTT Running NATTT]
+  * [ResolverSetup Resolver Setup]
 
 = Details =
 
