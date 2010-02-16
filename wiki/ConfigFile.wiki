@@ -46,11 +46,15 @@ Example: port = 100
 == Sample config file ==
 
 *Server:* (behind a NAT box)
+{{{
 ip = 10.0.0.22
 resolver = 10.0.0.2
 port = 101
+}}}
 
 *Client:*
+{{{
 ip = 150.x.x.x
 resolver = 150.x.x.x
 port = 101
+}}}
