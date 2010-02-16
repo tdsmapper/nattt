@@ -1,0 +1,21 @@
+#summary Setting up the DNS Resolver to work with NATT
+
+= Introduction =
+
+Following are the instructions to set up the BIND9 DNS Resolver to work with NATTT. BIND9 can be [http://www.bind9.net/download downloaded] and installed for Linux/UNIX/Mac and Windows.
+
+= Details =
+
+== Custom DNS record ==
+NATTT uses a custom record number 65324 to store data about tunneling through the NAT box. If this conflicts with something that you use, please change this in _dns_rr.h_:
+
+{{{ #define DNS_RR_NAT3 65324 }}}
+
+It is recommended to change the number to a number between 65280-65535 (Private use numbers). The corresponding DNS RR Type in BIND9 will be TYPE6xxxx. In the example above, it would be TYPE65324..
+
+== Generating the NAT3 Resource Record ==
+In order to generate a usable NAT3 resource record in a format that NATTT can understand, use the _scripts/gen_nat3.pl_ script. The format for the script is:
+
+{{{ /gen nat3.pl <name> <external> <port> <internal> }}}
+
+Where external refers to the NAT box's address, port refers to the port NATTT listens on (set up in [ConfigFile config file]), internal refers to the IP address on which NATTT listens (set up in [ConfigFile config file]).
