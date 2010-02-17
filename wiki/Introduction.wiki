@@ -6,7 +6,7 @@ Our NAT traversal design aims to achieve two main goals. First, the solution sho
 
 The basic idea is to tunnel packets through NAT boxes to restore end-to-end reachability. Suppose an external host A wants to initiate communication with an internal host B behind a NAT box Y. If A knows both Y's public address (Ypub) and B's private address, A can tunnel packets to B as follows. The outer header of a packet is destined to Ypub, so that the packet can be routed over the public Internet to reach Y; The inner header is addressed to B, so that when Y receives the packet, it can remove the outer header and find out where to forward the packet within the private network.
 
-[http://www.cs.arizona.edu/~bzhang/nat/figures/portforward.png Main Image]
+http://www.cs.arizona.edu/~bzhang/nat/figures/portforward.png
 
 
 = List of pages =
