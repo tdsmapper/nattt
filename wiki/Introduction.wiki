@@ -9,10 +9,10 @@ The basic idea is to tunnel packets through NAT boxes to restore end-to-end reac
 
 http://www.cs.arizona.edu/~bzhang/nat/figures/portforward.png
 
+Complete details are found [http://www.cs.arizona.edu/~bzhang/nat/nattt.htm here].
 
-= List of pages =
+= List of pages on wiki =
 
-  * [http://www.cs.arizona.edu/~bzhang/nat/nattt.htm Main design page]
   * [Installation Installation]
   * [RunningNATTT Running NAT3D]
   * [ResolverSetup Resolver Setup]
