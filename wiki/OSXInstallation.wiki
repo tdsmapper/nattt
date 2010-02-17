@@ -1,14 +1,14 @@
-#summary Installation of NATTT on UNIX/Mac OS X
+#summary Installation of NAT3D on UNIX/Mac OS X
 #labels Phase-Deploy
 
 = Additional Software/Drivers =
 
-  * Installation of NATTT on Mac OS X requires the [http://tuntaposx.sourceforge.net/download.xhtml TUN/TAP driver].
+  * Installation of NAT3D on Mac OS X requires the [http://tuntaposx.sourceforge.net/download.xhtml TUN/TAP driver].
   * Installation of the TUN/TAP driver is similar to installing any other program on the Mac OS X
   * An error such as _unable to open /dev/tun0_ suggests the driver was not installed correctly.
 
 
 = Details =
 
-  * Installing NATTT on Linux is like installing any other application from source (./configure, make, make install). 
+  * Installing NAT3D on Linux is like installing any other application from source (./configure, make, make install). 
   * To install the application, you would need [http://developer.apple.com/products/membership.html Mac Developer tools]. The online/free membership will do.
