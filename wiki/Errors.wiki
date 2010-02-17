@@ -5,7 +5,7 @@
 === Unknown Ethertype FE0A ===
 The problem is that NAT3 Daemon expects to open a TAP device, but opened
 a TUN device instead. Add the following 
-to the makefile CFLAGS: -DNAT3'_'TAP.
+to the makefile CFLAGS: -DNAT3`_`TAP.
 
 === NXDOMAIN not returned by BIND9 on "A" Query ====
 In several documents associated with the NATTTT Daemon, it is mentioned that the
