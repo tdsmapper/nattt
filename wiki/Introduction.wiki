@@ -1,8 +1,17 @@
 #summary Introduction to NATTT
 
+= Overview of solution =
+
+Our NAT traversal design aims to achieve two main goals. First, the solution should be generic. It should support all applications and transport protocols, and it should also support nested NATs. Second, it should be incrementally deployable. It should be compatible with existing infrastructures, including NAT boxes, hosts, and applications, and the cost and gains of deploying the solution should align at the same place.
+
+The basic idea is to tunnel packets through NAT boxes to restore end-to-end reachability. Suppose an external host A wants to initiate communication with an internal host B behind a NAT box Y. If A knows both Y's public address (Ypub) and B's private address, A can tunnel packets to B as follows. The outer header of a packet is destined to Ypub, so that the packet can be routed over the public Internet to reach Y; The inner header is addressed to B, so that when Y receives the packet, it can remove the outer header and find out where to forward the packet within the private network.
+
+[http://www.cs.arizona.edu/~bzhang/nat/figures/portforward.png Main Image]
+
+
 = List of pages =
 
-  * [http://www.cs.arizona.edu/~bzhang/nat/nattt.htm Details webpage]
+  * [http://www.cs.arizona.edu/~bzhang/nat/nattt.htm Main design page]
   * [Installation Installation]
   * [RunningNATTT Running NATTT]
   * [ResolverSetup Resolver Setup]
