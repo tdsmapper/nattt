@@ -15,5 +15,4 @@ http://www.cs.arizona.edu/~bzhang/nat/figures/portforward.png
   * [Installation Installation]
   * [RunningNATTT Running NATTT]
   * [ResolverSetup Resolver Setup]
-
-[Errors Errors] faced with NAT3D.
+  * [Errors Errors] faced with NAT3D.
