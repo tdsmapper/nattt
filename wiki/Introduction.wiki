@@ -1,4 +1,5 @@
 #summary Introduction to NATTT
+#labels Phase-Deploy
 
 = Overview of solution =
 
@@ -13,6 +14,6 @@ http://www.cs.arizona.edu/~bzhang/nat/figures/portforward.png
 
   * [http://www.cs.arizona.edu/~bzhang/nat/nattt.htm Main design page]
   * [Installation Installation]
-  * [RunningNATTT Running NATTT]
+  * [RunningNATTT Running NAT3D]
   * [ResolverSetup Resolver Setup]
   * [Errors Errors] faced with NAT3D.
