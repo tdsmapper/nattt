@@ -48,9 +48,11 @@ Example: port = 100
 *Server:* (behind a NAT box)
 {{{
 ip = 10.0.0.22
-resolver = 10.0.0.2
+resolver = 10.0.0.1
 port = 101
 }}}
+
+The server does not require a resolver, so it is set to the resolver it uses (e.g the NAT box itself).
 
 *Client:*
 {{{
@@ -58,3 +60,5 @@ ip = 150.x.x.x
 resolver = 150.x.x.x
 port = 101
 }}}
+
+The client requires the resolver, and is set to a resolver which can handle NAT3 queries.
