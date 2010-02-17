@@ -3,7 +3,7 @@
 
 = Installation =
 
-Please choose your operating system for detailed instructions on how to install and set up NATTT on your machine:
+Please choose your operating system for detailed instructions on how to install and set up NAT3D on your machine:
 
   # [WindowsInstallation Windows 2000 or later]
   # [OSXInstallation Mac OS X/UNIX]
