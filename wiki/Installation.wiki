@@ -17,4 +17,18 @@ Please choose your operating system for detailed instructions on how to install 
   # [OSXInstallation Mac OS X/UNIX]
   # [LinuxInstallation Linux]
 
+== Step 3: Set resolver to local machine ==
+
+You need to set up your machine as the local resolver. The NAT3D listens on the DNS port and handles all DNS queries.
+
+=== Linux/UNIX/Mac:===
+
+There is a script _resolv-roll.pl_ that will update config file of NAT3D to reflect the new resolver, and also update /etc/resolv.conf
+
+=== Windows: ===
+
+This needs to be done manually. No automation has been developed for this.
+
+Good instructions for changing the resolver to local machine are found at: http://code.google.com/speed/public-dns/docs/using.html
+
 Back to [Introduction introduction].
