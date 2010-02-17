@@ -1,4 +1,4 @@
-#summary Installation of NATTT on Windows
+#summary Installation of NAT3D on Windows
 
 = Introduction =
 
