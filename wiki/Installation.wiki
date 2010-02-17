@@ -8,3 +8,5 @@ Please choose your operating system for detailed instructions on how to install 
   # [WindowsInstallation Windows 2000 or later]
   # [OSXInstallation Mac OS X/UNIX]
   # [LinuxInstallation Linux]
+
+Back to [Introduction introduction].
