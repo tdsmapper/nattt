@@ -39,3 +39,5 @@ Where:
   * DNS Type: Type of record you want to query for. If the DNS Custom record number you used is 65324, the DNS Type is _TYPE65324_
 
 If you query for an "A" record for the server name, you would get back either a NXDOMAIN (Non-existant domain), or a response with no answer section. Querying for the custom type should return the data you generated via the _gen_nat3.pl_ script.
+
+Back to [Introduction introduction].
