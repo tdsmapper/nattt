@@ -1,24 +1,24 @@
-#summary Setting up the DNS Resolver to work with NATT
+#summary Setting up the DNS Resolver to work with NAT3D
 
 = Introduction =
 
-Following are the instructions to set up the BIND9 DNS Resolver to work with NATTT. BIND9 can be [http://www.bind9.net/download downloaded] and installed for Linux/UNIX/Mac and Windows.
+Following are the instructions to set up the BIND9 DNS Resolver to work with NAT3D. BIND9 can be [http://www.bind9.net/download downloaded] and installed for Linux/UNIX/Mac and Windows.
 
 = Details =
 
 == Custom DNS record ==
-NATTT uses a custom record number 65324 to store data about tunneling through the NAT box. If this conflicts with something that you use, please change this in _dns_rr.h_:
+NAT3D uses a custom record number 65324 to store data about tunneling through the NAT box. If this conflicts with something that you use, please change this in _dns_rr.h_:
 
 {{{ #define DNS_RR_NAT3 65324 }}}
 
 It is recommended to change the number to a number between 65280-65535 (Private use numbers). The corresponding DNS RR Type in BIND9 will be TYPE6xxxx. In the example above, it would be TYPE65324..
 
 == Generating the NAT3 Resource Record ==
-In order to generate a usable NAT3 resource record in a format that NATTT can understand, use the _scripts/gen_nat3.pl_ script. The format for the script is:
+In order to generate a usable NAT3 resource record in a format that NAT3D can understand, use the _scripts/gen_nat3.pl_ script. The format for the script is:
 
 {{{ /gen nat3.pl <name> <external> <port> <internal> }}}
 
-Where _name_ refers to the FQDN (ending with a period) name for the server, _external_ refers to the NAT box's address, _port_ refers to the port NATTT listens on (set up in [ConfigFile config file]), _internal_ refers to the IP address on which NATTT listens (set up in [ConfigFile config file]).
+Where _name_ refers to the FQDN (ending with a period) name for the server, _external_ refers to the NAT box's address, _port_ refers to the port NAT3D listens on (set up in [ConfigFile config file]), _internal_ refers to the IP address on which NAT3D listens (set up in [ConfigFile config file]).
 
 This record is copy into the zone database of BIND9 (eg. myzone.db)
 
