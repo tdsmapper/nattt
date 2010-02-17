@@ -1,4 +1,4 @@
-#summary Installation of NATTT on Linux
+#summary Installation of NAT3D on Linux
 #labels Phase-Deploy
 
 = Additional software/drivers =
@@ -6,4 +6,4 @@
 
 = Details =
 
-  * Installing NATTT on Linux is like installing any other application from source (_./configure, make, make install_).
+  * Installing NAT3D on Linux is like installing any other application from source (_./configure, make, make install_).
