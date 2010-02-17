@@ -1,16 +1,15 @@
-#summary Running NATTT
+#summary Running NAT3D
 
 = Introduction =
 
 You need to be an administrator to run NATT. However, in Linux/Mac, it is sufficient to have access to the TUN/TAP device.
-Running NATTT is with the following command on all Operating Systems:
+Running NAT3D is with the following command on all Operating Systems:
 
-_./nattt <config file>_
+_./nat3d <config file>_
 (Read about the [ConfigFile config file]).
 
 
 
 = Details =
 
-  * NATTT can be built with debugging support enabled. To do this, please use the -DDEBUG flag in the Makefile (Mac/Linux/UNIX only).
-  * 
+  * NAT3D can be built with stderr debugging support enabled. To do this, please use the -DDEBUG flag in the Makefile (Mac/Linux/UNIX only).
