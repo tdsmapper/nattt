@@ -25,7 +25,7 @@ This record is copy into the zone database of BIND9 (eg. myzone.db)
 == Setting up the DNS Zone ==
 You need to set up a zone that is authoritative for names that return a NAT3 record type. Good information is found [http://www.debuntu.org/book/export/html/85 here].
 
-For a sample DNS Zone file used, please [SampleZoneFile view].
+For a sample DNS Zone file used, please [SampleZoneFile view]. This applies to BIND9 on Linux/Windows. On Windows, just the paths need to be changed to point to the BIND9 installation.
 
 == Testing the DNS Resolver ==
 You can use the _dig_ command to test the resolver. _dig_ is available on Mac and Linux, and is found in the bind directory for Windows installs.
