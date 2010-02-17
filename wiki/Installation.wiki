@@ -4,7 +4,7 @@
 = Installation =
 
 == Step 1: Download==
-Download from [http://code.google.com/p/support/source/checkout here]
+Download from [http://code.google.com/p/support/source/checkout here] via SVN.
 
 == Step 2: Build/Run == 
 
