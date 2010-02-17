@@ -5,7 +5,9 @@
 
 == Step 1: Download==
 Download via SVN.
+{{{
 svn checkout http://nattt.googlecode.com/svn/branch/tdsmapper/nat3/ support-read-only  
+}}}
 
 == Step 2: Build/Run == 
 
