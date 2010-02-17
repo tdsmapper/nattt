@@ -29,6 +29,6 @@ There is a script _resolv-roll.pl_ that will update config file of NAT3D to refl
 
 This needs to be done manually. No automation has been developed for this.
 
-Good instructions for changing the resolver to local machine are found at: http://code.google.com/speed/public-dns/docs/using.html
+Good instructions for changing the resolver are found at: http://code.google.com/speed/public-dns/docs/using.html. You need to use the IP address 127.0.0.1 instead of the google server addresses.
 
 Back to [Introduction introduction].
