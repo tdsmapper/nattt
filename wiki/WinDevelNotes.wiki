@@ -12,7 +12,7 @@
 
 = References =
   * http://www.varsanofiev.com/inside/using_tuntap_under_windows.htm
-  * www.h7.dion.ne.jp/~qemu-win/TapWin32-en.html
-  * openvpn.net/INSTALL-win32.html 
+  * http://ww.h7.dion.ne.jp/~qemu-win/TapWin32-en.html
+  * http://openvpn.net/INSTALL-win32.html 
   * http://colinux.wikia.com/wiki/TAP-Win32_Adapter_V8_%28coLinux%29
   * http://vtun.sourceforge.net/tun/faq.html
