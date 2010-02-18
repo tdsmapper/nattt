@@ -1,0 +1,9 @@
+#summary NATTT Flowchart
+
+This shows NAT3D working as a client
+
+http://img214.imageshack.us/img214/5789/slide2v.jpg
+
+This shows NAT3D working as a server. The TUN/TAP device is bridged with ethernet to make other servers behind the NAT box accessible.
+
+http://img651.imageshack.us/img651/2640/slide3i.jpg
