@@ -1,4 +1,5 @@
 #summary Installation of NAT3D on Windows
+#labels Phase-Deploy
 
 = Introduction =
 
@@ -14,3 +15,9 @@ As of now, the easiest way to get this done is by downloading the [http://openvp
 Once you have downloaded the OpenVPN Windows installer, open it, and install only the TAP-WIN32 driver from the "Choose Components" screen.
 
 http://img208.imageshack.us/img208/6015/openvpntaponly.png
+
+= Disabling the firewall on the TUN/TAP device =
+
+One issue you may encounter with using NAT3D is that the Windows Firewall or a firewall from any other provider may not trust the network traffic on the TUN/TAP. This can lead to incorrect functioning of NAT3D.
+
+Therefore, you might have to add the TUN/TAP device's network as a safe/accepted/trusted network. The default network used by the TUN/TAP device is 10.254.0.1/16
