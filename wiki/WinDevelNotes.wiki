@@ -3,7 +3,7 @@
 = Introduction =
 
   * Windows uses the TUN/TAP driver from OpenVPN. Instructions to download and install are [WindowsInstallation here].
-  * The driver is used in the TAP mode mainly to support ethernet-TAP [openvpn.net/bridge.html bridging].
+  * The driver is used in the TAP mode mainly to support ethernet-TAP [http://openvpn.net/bridge.html bridging].
 
 = Specific notes w.r.t Network behavior of the TUN/TAP device =
   * You must handle ARP for the network device. 
