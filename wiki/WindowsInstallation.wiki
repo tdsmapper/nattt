@@ -10,7 +10,7 @@ Installation on Windows requires 2 major steps:
 
 = Installation of the TUN/TAP driver from OpenVPN =
 
-As of now, the easiest way to get this done is by downloading the [http://openvpn.net/index.php/open-source/downloads.html OpenVPN] Windows Installer.
+As of now, the easiest way to get this done is by downloading the [http://openvpn.net/index.php/open-source/downloads.html OpenVPN] Windows Installer (1 MB in size).
 
 Once you have downloaded the OpenVPN Windows installer, open it, and install only the TAP-WIN32 driver from the "Choose Components" screen.
 
