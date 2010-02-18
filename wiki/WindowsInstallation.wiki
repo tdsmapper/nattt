@@ -7,9 +7,10 @@ Installation on Windows requires 2 major steps:
   # Disabling the firewall from blocking traffic on the TUN/TAP Device
 
 
-= Details =
+= Installation of the TUN/TAP driver from OpenVPN =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+As of now, the easiest way to get this done is by downloading the [http://openvpn.net/index.php/open-source/downloads.html OpenVPN] Windows Installer.
+
+Once you have downloaded the OpenVPN Windows installer, open it, and install only the TAP-WIN32 driver from the "Choose Components" screen.
+
+http://img208.imageshack.us/img208/6015/openvpntaponly.png
