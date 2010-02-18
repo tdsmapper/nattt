@@ -1,7 +1,7 @@
 
 CC =    gcc
 CXX =    g++
-CFLAGS =  -g -O2  -DHAVE_CONFIG_H
+CFLAGS =  -g -O2  -DHAVE_CONFIG_H -DNAT3_TAP
 LDFLAGS =  -lpthread 
 DEFINES = -D_POSIX_THREADS -DHAVE_CONFIG_H
 DNS = dns_a.o dns_compression.o dns_header.o dns_name.o dns_nat3.o dns_packet.o dns_query.o dns_rr.o
@@ -11,7 +11,7 @@ TEST_DRIVERS = test_tun_mgr
 PROG = nat3d nat3ping
 
 CFLAGS += -Wall -Werror -D_REENTRANT
-CFLAGS += -DDEBUG -g
+CFLAGS += -g
 
 CXXFLAGS += $(CFLAGS)
 

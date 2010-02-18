@@ -67,7 +67,7 @@ TunnelMgr::TunnelMgr()
     m_iMaxIn(0),
     m_iMaxOut(0),
 #ifndef _MSC_VER
-    m_sListenFd(-1), // TODO: Init in Windows
+    m_sListenFd(-1),
     m_hTunFd(-1),
 #endif
     m_iPort(0),
@@ -230,14 +230,6 @@ bool TunnelMgr::init(uint32_t p_uListenIP,
 
   return m_bInit;
 }
-
-// This is the main loop...
-/* Rewritten per OS */
-//bool TunnelMgr::listen()
-//{
-//  OS_listen();
-//  return true;
-//}
 
 bool TunnelMgr::timeout()
 {
@@ -617,7 +609,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     DWORD dwBytesWritten = 0;
     BOOL bWasOverlapped = false;
 
-    if (WriteFile(p_iFd, &p_tPkt.m_pData[0], (p_tPkt.m_uOffset), // TODO
+    if (WriteFile(p_iFd, p_tPkt.m_pData, (p_tPkt.m_uOffset), // TODO
       &dwBytesWritten, &stOverlap))
     {
       eprintf("WriteFile completed with %d!!\n", dwBytesWritten);
@@ -629,7 +621,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
       // Not a real error. We're fine
       if (ERROR_IO_PENDING == lastError)
       {
-        // So lets wait for the overlapped I/O to complete. Also note that we're overwriting dwBytesWritten
+        // So lets wait for the overlapped I/O to complete. Note that we're overwriting dwBytesWritten
         if (!GetOverlappedResult(p_iFd, &stOverlap, &dwBytesWritten, TRUE))
         {
           bRet = false;
@@ -662,6 +654,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     eprintf("Write request to socket %x IP, %d bytes, %s data\n", p_tPkt.m_uIP, (int)p_tPkt.m_uSize, p_tPkt.m_pData);
     dprintf("writepkt to %d socket %d bytes %x ip, %d port\n", p_iFd, iTemp, tAddr.sin_addr.s_addr, tAddr.sin_port);
   }
+
   if (iTemp <= 0
       && EINTR != errno
       && EAGAIN != errno)
@@ -871,7 +864,8 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
         memcpy(&uResponseIP, &(pBuff[TUN_MGR_ARP_TPA]), 4);
         if (((ntohl(uResponseIP) & m_uMask) != m_uLocalNet)
           || ((ntohl(uResponseIP) & ~m_uMask) == 1)) //TODO
-          // Windows: Do not reply for ARPs to the adapter's IP: That will trigger auto-addressing
+          // Windows: Do not reply for ARPs to the adapter's IP: That seems to trigger auto 
+          // address allocation for the interface.
         {
           eprintf("Got arp request for unknown IP: %x\n", ntohl(uResponseIP));
           destroyPkt(p_tPkt);
@@ -880,13 +874,14 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
         {
           struct ether_header *pEth = (struct ether_header*)p_tPkt.m_pData;
 
-          // ARP request is a broadcast; ARP reply is a one-to-one packet
+          // ARP request is a broadcast; ARP reply is a one-to-one packet (at least on Windows)
           memcpy(pEth->ether_dhost, m_pTapMac, 6);
           memcpy(pEth->ether_shost, m_pTapMac, 6);
 
-          eprintf(" for IP Address: %x\n", uResponseIP);
+          // Send it back to the source addr. it came from
           memcpy(&(pBuff[TUN_MGR_ARP_THA]), pSrcMac, 6);
 
+          // The source address of the packet differs for Windows and *NIX
 #ifdef _MSC_VER
           // Windows: Reply with a MAC address other than the MAC address of the TUN/TAP device
           memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_uNatNetMac, 6);
@@ -894,11 +889,14 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
           // *NIX: Reply with the MAC address of the TUN/TAP device
           memcpy(&(pBuff[TUN_MGR_ARP_SHA]), m_pTapMac, 6);
 #endif /* _MSC_VER */
+
           memcpy(&(pBuff[TUN_MGR_ARP_TPA]), &uSrcIP, 4);
           memcpy(&(pBuff[TUN_MGR_ARP_SPA]), &uResponseIP, 4);
           pArp->ar_op = htons(ARPOP_REPLY);
 
+          // Write/Enqueue the packet back for sending
 #ifdef _MSC_VER
+          // Windows: Send it rightaway. Since ARP is relatively infrequent, this should not be an issue.
           //p_tPkt.m_uOffset = 0; // TODO/XXX
           if (!writePkt(m_hTunFd, p_tPkt, true)) //TODO/XXX
           {
@@ -919,7 +917,6 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
 #endif /* _MSC_VER */
 
           bRet = true;
-
         }
       }
     }
@@ -930,15 +927,15 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
 
       char srcIP[25];
       char dstIP[25];
-#ifdef _MSC_VER
+
       // TODO: Try and unify this.
+#ifdef _MSC_VER
       net_itoa(ntohl(pIP->ip_dst.S_un.S_addr), dstIP);
       net_itoa(ntohl(pIP->ip_src.S_un.S_addr), srcIP);
 #else
       net_itoa(ntohl(pIP->ip_dst.s_addr), dstIP);
       net_itoa(ntohl(pIP->ip_src.s_addr), srcIP);
 #endif
-      eprintf("IP frame from: %s to: %s\n", srcIP, dstIP);
         
       char *pTmp = new char[uLen];
       memcpy(pTmp, pIP, uLen);
@@ -946,7 +943,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
       delete[] p_tPkt.m_pData;
       p_tPkt.m_pData = pTmp;
 
-#ifndef _MSC_VER     // Onl *NIX uses the queue
+#ifndef _MSC_VER     // Only *NIX uses the queue
       if (!m_oOutboundQueue.enqueue(p_tPkt))
       {
         eprintf("Unable to enqueue outbound IP packet.\n");
@@ -958,7 +955,6 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
         bRet = true;
       }
 #endif /* _MSC_VER */
-
       bRet = true;
     }
     else
@@ -968,7 +964,6 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
       destroyPkt(p_tPkt);
     }
   }
-
   return bRet;
 }
 
