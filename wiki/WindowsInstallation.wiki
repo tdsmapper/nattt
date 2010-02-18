@@ -21,3 +21,6 @@ http://img208.imageshack.us/img208/6015/openvpntaponly.png
 One issue you may encounter with using NAT3D is that the Windows Firewall or a firewall from any other provider may not trust the network traffic on the TUN/TAP. This can lead to incorrect functioning of NAT3D.
 
 Therefore, you might have to add the TUN/TAP device's network as a safe/accepted/trusted network. The default network used by the TUN/TAP device is 10.254.0.1/16
+
+= Official site =
+If none of the above are helpful, please visit the [http://openvpn.net/INSTALL-win32.html official site].
