@@ -73,8 +73,7 @@ bool Resolver::listen()
 
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = INADDR_ANY;
-    //sin.sin_port = htons(DNS_PORT);
-    sin.sin_port = htons(101);
+    sin.sin_port = htons(DNS_PORT);
 
     // allow the socket to re-bind to the same port
     do {

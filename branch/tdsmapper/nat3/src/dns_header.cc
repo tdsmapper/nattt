@@ -75,7 +75,7 @@ bool DnsHeader::init(unsigned char *bytes, size_t size)
     // read various shorts from the header
     header_fmt *h = (header_fmt *)bytes;
     m_id = ntohs(h->id);
-    eprintf("Assigning an id of %d/%d\n", ntohs(h->id), m_id);
+    eprintf("Assigning an id of %d\n", m_id);
     m_qdcount = ntohs(h->qdcount);
     m_ancount = ntohs(h->ancount);
     m_nscount = ntohs(h->nscount);
@@ -88,7 +88,6 @@ bool DnsHeader::init(unsigned char *bytes, size_t size)
     unpack_flags(bytes + 2);
     m_init = true;
   }
-  eprintf("Assigning an id of %d/%d\n", m_id, id());
   return m_init;
 }
 

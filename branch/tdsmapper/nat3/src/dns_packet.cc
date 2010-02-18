@@ -94,7 +94,6 @@ bool DnsPacket::parse()
   m_header = new DnsHeader();
   if (m_header->init(bytes, size))
   {
-    eprintf("0The header ID is %d\n", m_header->id());
     size_t pos = DnsHeader::SIZE;
 
     //// get all the question RRs
@@ -153,7 +152,6 @@ bool DnsPacket::parse()
     clear_vectors(); 
     m_parsed = false;
   }
-  eprintf("1The header ID is %d\n", m_header->id());
   return m_parsed;
 }
 
