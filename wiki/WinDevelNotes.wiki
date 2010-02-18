@@ -1,0 +1,18 @@
+#summary Windows development notes for NAT3D
+
+= Introduction =
+
+  * Windows uses the TUN/TAP driver from OpenVPN. Instructions to download and install are [WindowsInstallation here].
+  * The driver is used in the TAP mode mainly to support ethernet-TAP [openvpn.net/bridge.html bridging].
+
+= Specific notes w.r.t Network behavior of the TUN/TAP device */
+  * You must handle ARP for the network device. 
+  * Replying to a query for an ARP request that asks for the address on the TUN/TAP device results in windows auto-configuring that device.
+  * ARP queries for any network address in the TUN/TAP network should be replied with a different MAC address from that of the adapter (unlike Linux).
+
+= References =
+  * http://www.varsanofiev.com/inside/using_tuntap_under_windows.htm
+  * www.h7.dion.ne.jp/~qemu-win/TapWin32-en.html
+  * openvpn.net/INSTALL-win32.html 
+  * http://colinux.wikia.com/wiki/TAP-Win32_Adapter_V8_%28coLinux%29
+  * http://vtun.sourceforge.net/tun/faq.html
