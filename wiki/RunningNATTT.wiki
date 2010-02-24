@@ -8,7 +8,9 @@ Running NAT3D is with the following command on all Operating Systems:
 _./nat3d <config file>_
 (Read about the [ConfigFile config file]).
 
+= Server/Client =
 
+The same application can function as both the server and the client. You may need to change the [ConfigFile config file] accordingly. Its also required to forward the port from the NAT box to the port that NAT3D listens on (option in the config file).
 
 = Details =
 
