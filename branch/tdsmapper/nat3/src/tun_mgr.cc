@@ -12,6 +12,7 @@
 #include <netinet/ip.h>
 #else
 #include <Winsock2.h>
+#include <Iphlpapi.h>
 #endif
 
 #ifndef __FAVOR_BSD
@@ -119,6 +120,7 @@ bool TunnelMgr::init(uint32_t p_uListenIP, uint16_t port)
               port,
               NAT3_LOCAL_NET,
               NAT3_LOCAL_NETMASK,
+              DEFAULT_BRIDGE,
               TUN_MGR_MAX_LRU,
               TUN_MGR_MAX_LRU,
               TUN_MGR_MAX_PKT_QUEUE,
@@ -129,6 +131,7 @@ bool TunnelMgr::init(uint32_t p_uListenIP,
                      int p_iPort,
                      uint32_t p_uLocalNet,
                      uint32_t p_uMask,
+                     bool p_bBridge,
                      int p_iMaxIn,
                      int p_iMaxOut,
                      int p_iMaxPktIn,
@@ -139,11 +142,12 @@ bool TunnelMgr::init(uint32_t p_uListenIP,
   try
   {
     m_uListenIP = p_uListenIP;
-    m_iPort = p_iPort;
+    m_iPort     = p_iPort;
 
     // This is the local network that the tun device will use
     m_uLocalNet = p_uLocalNet;
-    m_uMask = p_uMask;
+    m_uMask     = p_uMask;
+    m_bBridge   = p_bBridge;
 
     // When we allocate IPs to tunnels, this var decides what
     // value to set next.  We set it to 0 here so that the
@@ -437,7 +441,7 @@ bool TunnelMgr::replaceIp(tun_pkt_t &p_tPkt)
 eprintf("replaceip original src is %s\n", inet_ntoa(pIpHdr->ip_src));
 eprintf("replaceip original dst is %s\n", inet_ntoa(pIpHdr->ip_dst));
     pIpHdr->ip_src.s_addr = htonl(uNewSrcIP);
-    pIpHdr->ip_dst.s_addr = htonl(m_uLocalNet + 1);
+    //pIpHdr->ip_dst.s_addr = htonl(m_uLocalNet + 1);
 eprintf("replace ip new src is %s\n", inet_ntoa(pIpHdr->ip_src));
 eprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
 	pIpHdr->ip_sum = 0;
@@ -707,8 +711,31 @@ bool TunnelMgr::convertToFrame(tun_pkt_t &p_tPkt)
     memset(pEthFrame, 0, m_iTunMTU);
     struct ether_header *pEthHdr = (struct ether_header *) pEthFrame;
 
+/* Get the MAC addresses to send to the destination - Bridging supported */
+#ifdef _MSC_VER
+    /* Windows complication: Find the target IP address */
+    struct ip *pIpHdr = (struct ip*) p_tPkt.m_pData;
+    char macaddr[6];
+    
+    /* TODO: This function sends an ARP entry per packet.
+    The alternate way of playing with the ARP table to search/add an entry seems cumbersome */
+    if (GetAndUpdateArpEntry(pIpHdr->ip_dst.S_un.S_addr, macaddr, sizeof(macaddr)))
+    {
+      memcpy(pEthHdr->ether_dhost, macaddr, 6);
+    }
+    else
+    {
+      eprintf("Getting/updating ARP failed. Using TAP mac!\n");
+      memcpy(pEthHdr->ether_dhost, m_pTapMac, 6);
+    }
+    memcpy(pEthHdr->ether_shost, m_uNatNetMac, 6);
+    
+#else
     memcpy(pEthHdr->ether_shost, m_pTapMac, 6);
     memcpy(pEthHdr->ether_dhost, m_pTapMac, 6);
+#endif
+
+    
     pEthHdr->ether_type = htons(ETHERTYPE_IP);
     memcpy(&(pEthFrame[sizeof(ether_header)]), p_tPkt.m_pData, p_tPkt.m_uSize);
     delete[] p_tPkt.m_pData;
@@ -875,7 +902,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
           struct ether_header *pEth = (struct ether_header*)p_tPkt.m_pData;
 
           // ARP request is a broadcast; ARP reply is a one-to-one packet (at least on Windows)
-          memcpy(pEth->ether_dhost, m_pTapMac, 6);
+          memcpy(pEth->ether_dhost, pSrcMac, 6);
           memcpy(pEth->ether_shost, m_pTapMac, 6);
 
           // Send it back to the source addr. it came from

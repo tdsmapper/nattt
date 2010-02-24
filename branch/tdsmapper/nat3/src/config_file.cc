@@ -13,11 +13,8 @@ using namespace std;
 ConfigFile::ConfigFile() : m_error(NULL) {
     // load defaults
     m_options["port"] = xstr(NAT3_DEFAULT_PORT);
-
-    /* consider these?
-    m_options["local_net"] = xstr(NAT3_LOCAL_NAT);
+    m_options["local_net"] = xstr(NAT3_LOCAL_NET);
     m_options["local_netmask"] = xstr(NAT3_LOCAL_NETMASK);
-    */
 }
 
 bool ConfigFile::load(const string &file) {

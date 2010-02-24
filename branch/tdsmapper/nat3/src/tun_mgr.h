@@ -56,13 +56,17 @@ class TunnelMgr
     uint32_t m_uMask;
     uint32_t m_uNextIP;
     uint32_t m_uListenIP;
-//#ifdef NAT3_TAP
+    bool m_bBridge;
     u_char m_pTapMac[6];
-//#endif
+
 /* For Windows tunnel manager only */
 #ifdef _MSC_VER
+
+    int srcAddrSize;
+    DWORD dwFlags;
+
     // The MAC address to use when replying for ARP from an IP address in the TUN/TAP device's network
-  u_char m_uNatNetMac[6];
+    u_char m_uNatNetMac[6];
 #endif
 
   // Methods
@@ -81,6 +85,7 @@ class TunnelMgr
               int p_iPort,
               uint32_t p_uLocalNet,
               uint32_t p_uMask,
+              bool p_bBridge,
               int p_iMaxIn,
               int p_iMaxOut,
               int p_iMaxPktIn,

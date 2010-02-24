@@ -25,9 +25,11 @@
 
 // 127.254.0.0
 //#define NAT3_LOCAL_NET 0x7FFE0000
-#define NAT3_LOCAL_NET 0x0AFE0000
+//#define NAT3_LOCAL_NET 0x0AFE0000
+#define NAT3_LOCAL_NET 0x0A0000FC
 // 255.255.0.0
-#define NAT3_LOCAL_NETMASK 0xFFFF0000
+//#define NAT3_LOCAL_NETMASK 0xFFFF0000
+#define NAT3_LOCAL_NETMASK 0xFFFFFFFC
 
 // Max size of LRU cache
 #define TUN_MGR_MAX_LRU 1024
@@ -39,6 +41,9 @@
 #define TUN_MGR_ARP_SPA 14
 #define TUN_MGR_ARP_THA 18
 #define TUN_MGR_ARP_TPA 24
+
+// Default bridge behavior
+#define DEFAULT_BRIDGE false
 
 typedef struct
 {

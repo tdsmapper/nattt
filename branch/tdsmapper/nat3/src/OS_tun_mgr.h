@@ -33,6 +33,7 @@ HANDLE OS_openTapInterface();
   /* Search for the TAP device's GUID within this Registry key hKey. */
   bool SearchForDeviceGuid(HKEY hKey, __out TCHAR szGUID[]);
   bool GetDeviceGuid(__out TCHAR guid[]);
+  bool GetAndUpdateArpEntry(ULONG uIp, char macaddr[], UINT uMacAddrSize);
 
   /* Get the Name of the device (eg. Local Area Connection 4) */
   bool GetDeviceHumanName(__in TCHAR szGuid[], __out TCHAR szHumanName[]);

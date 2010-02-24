@@ -5,6 +5,7 @@
 #include <Winsock2.h>
 #include <WinDef.h>
 #include <Windows.h>
+#include <Iphlpapi.h>
 #include <string>
 #include <winnt.h>
 #include <iostream>
@@ -12,7 +13,6 @@
 #include <strsafe.h>
 #include <assert.h>
 #include <errno.h>
-
 
 #include "OS_tun_mgr.h"
 #include "types.h"
@@ -22,12 +22,14 @@
 #include "tun_out_ent.h"
 #include "functions.h"
 
+/* From nat3d.cc: Windows major and minor versions */
+extern DWORD dwMajorVersion, dwMinorVersion;
+
+/* Do not put these into the TunnelMgr class. They dont work */
 OVERLAPPED tunOverlapped;
 WSAOVERLAPPED listenOverlapped;
-int srcAddrSize;
 struct sockaddr_in srcAddr;
 WSABUF wsaBuf;
-DWORD dwFlags;
 
 /* Search for the TAP device's GUID within this Registry key hKey. */
 bool SearchForDeviceGuid(HKEY hKey, __out TCHAR szGUID[]) 
@@ -191,6 +193,64 @@ static UINT TAP_CONTROL_CODE(UINT request, UINT method)
 	return CTL_CODE(FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS);
 }
 
+/* Todo: Make code better and make it call SetIpNetEntry() only when required */
+bool GetAndUpdateArpEntry(ULONG uIp, char macaddr[], UINT uMacAddrSize)
+{
+  bool bRet = false;
+  /*Quoting:
+  >= Windows Vista: SendArp updates system ARP table
+  <= Windows 2003 : SendArp just sends a request. Need to update table manually
+  */
+  ULONG size = uMacAddrSize;
+  // Windows 2003 and lesser - got to test to see if its faster retrieving ARP table (GetIpNetTable), 
+  // searching for entry AND then either call SetIpNetEntry or CreateIpNetEntry.
+  // Deferred to a later date due to lack of system availability
+  if (NO_ERROR == SendARP(uIp, 0, (PULONG)macaddr, &size))
+  {
+    bRet = true;
+    
+    /* Less than Windows Vista i.e. Windows 2003 */
+    //if (dwMajorVersion > 6) 
+    //{
+    //  MIB_IPNETROW arpRow;
+    //  memcpy(arpRow.bPhysAddr, macaddr, uMacAddrSize);
+    //  arpRow.dwAddr        = uIp;
+    //  arpRow.dwPhysAddrLen = uMacAddrSize;
+    //  arpRow.dwType        = MIB_IPNET_TYPE_DYNAMIC;
+    //    DWORD dwRet;
+    //    dwRet = GetAdapterIndex(wszAdapterName, &arpRow.dwIndex);
+    //    if (NO_ERROR == dwRet)
+    //    {
+    //      if (NO_ERROR == SetIpNetEntry(&arpRow))
+    //      {
+    //        bRet = true;
+    //      }
+    //      else
+    //      {
+    //        eprintf("ARP entry not set %d\n", GetLastError());
+    //      }
+    //    }
+    //    else
+    //    {
+    //      eprintf("ARP entry not set %d\n", GetLastError());
+    //    }
+    //  }
+    //}
+    ///* Greater than or equal to Windows Vista */
+    //else
+    //{
+    //  bRet = true;
+    //}
+  }
+  else
+  {
+    bRet = false;
+    eprintf("SendARP failed with %d\n", GetLastError());
+  }
+  return bRet;
+}
+
+
 /* Open the TAP interface in Overlapped I/O mode. Easily modified to open TUN interface */
 HANDLE TunnelMgr::openTunInterface()
 {
@@ -290,36 +350,45 @@ bool TunnelMgr::configTunInterface(char *p_szDevice)  // p_szDevice is not neede
     net_itoa(m_uLocalNet + 1, szNetAddr);
     net_itoa(m_uMask, szNetmask);
 
-    if (GetDeviceGuid(szDevGUID))
+    // If we do not need to bridge, allocate such an IP address
+    if (!m_bBridge)
     {
-      if (GetDeviceHumanName(szDevGUID, szDevName))
+      if (GetDeviceGuid(szDevGUID))
       {
-        snprintf(szNetshCall, sizeof(szNetshCall), 
-          "netsh interface ip set address \"%s\" static %s %s", szDevName,
-          szNetAddr, szNetmask);
-        eprintf("Netsh call is %s\n", szNetshCall);
-        int iRet = system(szNetshCall);
-        DWORD dwLastError = GetLastError();
-        if (0 == iRet)
+        if (GetDeviceHumanName(szDevGUID, szDevName))
         {
-          if (ENOENT == dwLastError)
+          snprintf(szNetshCall, sizeof(szNetshCall), 
+            "netsh interface ip set address \"%s\" static %s %s", szDevName,
+            szNetAddr, szNetmask);
+          eprintf("Netsh call is %s\n", szNetshCall);
+          int iRet = system(szNetshCall);
+          DWORD dwLastError = GetLastError();
+          if (0 == iRet)
           {
-            fprintf(stderr, "Error %d: netsh interface call failed!\n", dwLastError);
+            if (ENOENT == dwLastError)
+            {
+              fprintf(stderr, "Error %d: netsh interface call failed!\n", dwLastError);
+            }
+            else
+            {
+              bRet = true;
+            }
+          }
+          else if (-1 == iRet)
+          {
+            fprintf(stderr, "Error %d: netsh interface call failed!\n", GetLastError());
           }
           else
           {
             bRet = true;
           }
         }
-        else if (-1 == iRet)
-        {
-          fprintf(stderr, "Error %d: netsh interface call failed!\n", GetLastError());
-        }
-        else
-        {
-          bRet = true;
-        }
       }
+    } 
+    /* bSetAddress */
+    else
+    {
+      bRet = true;
     }
   }
   return bRet;
