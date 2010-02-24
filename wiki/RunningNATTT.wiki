@@ -14,4 +14,8 @@ _./nat3d <config file>_
 
   * NAT3D can be built with stderr debugging support enabled. To do this, please use the -DDEBUG flag in the Makefile (Mac/Linux/UNIX only).
 
+= Bridging =
+
+To make other machines behind the NAT box accessible to NAT3D, and effectively to external hosts, you may need to create a [Bridge software bridge] between the TAP device and your internet interface.
+
 Back to [Introduction introduction].
