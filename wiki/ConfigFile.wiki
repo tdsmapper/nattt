@@ -55,7 +55,7 @@ If no option is specified, a default of 10.254.0.0/16 is used.
 
 == Bridging (Optional, Option: _bridge_)==
 
-Setting _bridge_ to "on" means that no address is assigned to the TAP interface/adapter. Setting it to off
+Setting _bridge_ to "on" means that no address is assigned to the TAP interface/adapter. Setting it to off means the TAP device/adapter is assigned the IP address specified.
 
 
 == Sample config file ==
