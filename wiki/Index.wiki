@@ -1,5 +1,7 @@
 #summary Wiki summary
 
+[Introduction Welcome]
+
 == Man/User pages ==
 
   * [Installation Installation]
