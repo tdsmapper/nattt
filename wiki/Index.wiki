@@ -13,4 +13,4 @@
   * [DeveloperPages Devel pages]
   * [NATTTFlowchart Flowchart of application]
 
-[list List of pages]
+[http://code.google.com/p/nattt/w/list List of pages]
