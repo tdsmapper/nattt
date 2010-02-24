@@ -47,7 +47,7 @@ Example: port = 100
 
 If you plan to use NAT3D as a client, or as a server with the intention of making the server the only machine reachable behind the NAT box, you may omit these options
 
-=== TAP address and netmask (Options: _tapnetaddr_, _tapnetmask_)===
+*TAP address and netmask (Options: _tapnetaddr_, _tapnetmask_*
 
 The options _tapnetaddr_ and _tapnetmask_ describe the IP address of the TAP adapter/device and the address range the TAP device listens on.
 
