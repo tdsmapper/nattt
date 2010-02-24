@@ -1,0 +1,27 @@
+#summary Setting up a bridge in Windows/Linux
+
+= Introduction =
+
+Setting up a network bridge allows you to run several machines behind a NAT box, run NAT3D on only one machine, and allow connectivity to all the machines behind the NAT box.
+
+http://img651.imageshack.us/img651/2640/slide3i.jpg
+
+As shown in the image, you need to bridge the TAP interface with the internet adapter (wireless or Ethernet interface).
+
+Doing so allows network traffic on one interface to be seen by both the TAP device and the Internet adapter. For more technical details refer [BridgeTech this page].
+
+= Windows =
+
+Bridging on Windows is simple. Good information is found [http://www.home-network-help.com/network-bridge.html here]. 
+
+http://img186.imageshack.us/img186/7469/vistabridge.png
+
+= Windows =
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
