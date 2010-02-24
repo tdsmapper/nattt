@@ -43,6 +43,21 @@ The port number is the port number on which NAT3D listens for incoming tunnel pa
 
 Example: port = 100
 
+== TUN/TAP details (optional) ==
+
+If you plan to use NAT3D as a client, or as a server with the intention of making the server the only machine reachable behind the NAT box, you may omit these options
+
+=== TAP address and netmask (Options: _tapnetaddr_, _tapnetmask_)===
+
+The options _tapnetaddr_ and _tapnetmask_ describe the IP address of the TAP adapter/device and the address range the TAP device listens on.
+
+If no option is specified, a default of 10.254.0.0/16 is used.
+
+== Bridging (Optional, Option: _bridge_)==
+
+Setting _bridge_ to "on" means that no address is assigned to the TAP interface/adapter. Setting it to off
+
+
 == Sample config file ==
 
 *Server:* (behind a NAT box)
@@ -50,6 +65,9 @@ Example: port = 100
 ip = 10.0.0.22
 resolver = 10.0.0.1
 port = 101
+tapnetmask = 10.0.0.252
+tapnetaddr = 255.255.255.252
+bridge = on
 }}}
 
 The server does not require a resolver, so it is set to the resolver it uses (e.g the NAT box itself).
