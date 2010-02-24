@@ -8,7 +8,7 @@ http://img651.imageshack.us/img651/2640/slide3i.jpg
 
 As shown in the image, you need to bridge the TAP interface with the internet adapter (wireless or Ethernet interface).
 
-Doing so allows network traffic on one interface to be seen by both the TAP device and the Internet adapter. For more technical details refer [BridgeTech this page]. Please note that once you have bridged two interfaces, both lose their IP addresses, and the "virtual bridge adapter" gets the IP address (DHCP or static) instead.
+Doing so allows network traffic on one interface to be seen by both the TAP device and the Internet adapter. Please note that once you have bridged two interfaces, both lose their IP addresses, and the "virtual bridge adapter" gets the IP address (DHCP or static) instead. Refer the [BridgeTech technical details page] for more detailed information.
 
 Note that you might need to disable the firewall on the TAP interface (add as accepted network) for NATTT to work.
 
