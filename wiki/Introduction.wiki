@@ -1,6 +1,17 @@
 #summary Introduction to NATTT
 #labels Phase-Deploy
 
+= Introduction =
+NATTT or NAT3D is a NAT box traversal solution. It requires no change to the server, client or the NAT box, and only expects some minimal behavior (port forwarding).
+
+For a more detailed description, view the [NATTTFlowchart flowchart].
+
+= Brief description of working =
+
+NAT3D is set to resolve DNS queries on the local machine. The resolver you use is set in the NAT3Ds [ConfigFile config file]. All DNS queries are sent to the resolver and the reply is sent back to the querying application. When NAT3D kicks in is when a DNS server returns "Domain not found" as a responses. In that case, NAT3D issues a custom query that you need to set up, with the response to that query, is able to tunnel packets to the NAT3D application running as server behind a NAT box, which decapsulates and forwards the packet to the machine behind the NAT box.
+
+Read on on how to set up NATTT for more details.
+
 = Overview of solution =
 
 Our NAT traversal design aims to achieve two main goals. First, the solution should be generic. It should support all applications and transport protocols, and it should also support nested NATs. Second, it should be incrementally deployable. It should be compatible with existing infrastructures, including NAT boxes, hosts, and applications, and the cost and gains of deploying the solution should align at the same place.
