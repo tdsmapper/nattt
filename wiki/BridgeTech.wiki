@@ -1,0 +1,15 @@
+#summary Some basic tech details about a software bridge
+
+= Introduction =
+
+A software network bridge is a layer 2 link between two network adapters. Therefore, all traffic on either interface is seen by both interfaces.
+
+NAT3D works by assigning a new IP address from the subnet it is configured with, by
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
