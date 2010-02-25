@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "resolver.h"
 #include "tun_mgr.h"
 #include "config_file.h"
@@ -160,7 +161,7 @@ bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
       fprintf(stderr, "tapnetaddr cannot be 0\n");
       return false;
     }
-    tapAddr = addr.s_addr;
+    tapAddr = ntohl(addr.s_addr);
 
     // Get net mask
     const string *tempString = f.get("tapnetmask");
@@ -172,12 +173,12 @@ bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
         fprintf(stderr, "tapnetmask is not a valid net mask\n");
         return false;
       }
-      else if (0 == tapMask)
+      else if (0 == addr.s_addr)
       {
         fprintf(stderr, "tapnetmask cannot be 0\n");
         return false;
       }
-      tapMask = addr.s_addr;
+      tapMask = ntohl(addr.s_addr);
     }
     else
     {
@@ -190,6 +191,7 @@ bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
     tapMask = NAT3_LOCAL_NETMASK;
     tapAddr = NAT3_LOCAL_NET;
   }
+  return true;
 }
 
 bool get_options(ConfigFile &f, uint32_t &ip_addr, uint16_t &port, uint32_t &tapAddr, uint32_t &tapMask, bool &bBridge) {

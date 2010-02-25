@@ -18,6 +18,7 @@
 #else
 #define snprintf(A,...) snprintf(A, __VA_ARGS__)
 int GetLastError();
+#define stricmp strcasecmp
 #endif /* _MSC_VER */
 
 #define err(value,cmdname) eprintf(cmdname " - err value is %d\n", value)
