@@ -61,6 +61,8 @@ Setting _bridge_ to "on" means that no address is assigned to the TAP interface/
 == Sample config file ==
 
 *Server:* (behind a NAT box)
+
+The server below uses 10.0.0.253 and 10.0.0.254 for source addresses for the NAT3D installation.
 {{{
 ip = 10.0.0.22
 resolver = 10.0.0.1
@@ -68,6 +70,15 @@ port = 101
 tapnetmask = 10.0.0.252
 tapnetaddr = 255.255.255.252
 bridge = on
+}}}
+
+{{{
+ip = 10.0.0.22
+resolver = 10.0.0.1
+port = 101
+tapnetmask = 10.0.0.0
+tapnetaddr = 255.255.255.0
+bridge = off
 }}}
 
 The server does not require a resolver, so it is set to the resolver it uses (e.g the NAT box itself).
