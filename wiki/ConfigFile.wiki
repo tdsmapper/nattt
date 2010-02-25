@@ -76,9 +76,16 @@ bridge = on
 ip = 10.0.0.22
 resolver = 10.0.0.1
 port = 101
-tapnetmask = 10.0.0.0
-tapnetaddr = 255.255.255.0
+tapnetmask = 10.254.0.0
+tapnetaddr = 255.255.0.0
 bridge = off
+}}}
+
+The above is the same as using the config file:
+{{{
+ip = 10.0.0.22
+resolver = 10.0.0.1
+port = 101
 }}}
 
 The server does not require a resolver, so it is set to the resolver it uses (e.g the NAT box itself).
