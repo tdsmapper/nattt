@@ -21,4 +21,7 @@ This was an issue that came up with a version of BIND9 unexpectedly. The
 solution followed at that time was to upgrade the version of BIND9 to the latest
 version.
 
+=== Packet sent from NAT3D to machine X on network, but no reply ===
+Check that NAT3D is handling ARP reply to machine X. If it is not sending a reply, this might be a NAT3D bug.
+
 Back to [Introduction introduction].
