@@ -22,6 +22,8 @@ solution followed at that time was to upgrade the version of BIND9 to the latest
 version.
 
 === Packet sent from NAT3D to machine X on network, but no reply ===
-Check that NAT3D is handling ARP reply to machine X. If it is not sending a reply, this might be a NAT3D bug.
+Check that NAT3D is handling ARP reply to machine X i.e. sending an ARP reply. If it is not sending an ARP reply, this might be a NAT3D bug.
 
+=== Bridge mysteriously changes address every time NAT3D Runs/quits ===
+Windows: You probably have set the TUN/TAP device media status to "Application Controlled", which means that every time you start the TUN/TAP device, the bridge requests a new IP address.
 Back to [Introduction introduction].
