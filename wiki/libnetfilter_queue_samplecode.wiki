@@ -10,7 +10,7 @@ Simple Example
 Program
 
 This is a simple program to print information about intercepted packets, and mark them to be forwarded on. Note that the logic as to which packets to intercept is handled via iptables, explained below.
-
+{{{
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2007 Joe Kopena, Drexel University
@@ -168,12 +168,14 @@ int main(int argc, char **argv) {
 
   // end main
 }
+}}}
 
 Building
 
 Do something like this to compile the program:
-
+{{{
   g++ -o nftest nftest.cc -lnetfilter_queue
+}}}
 
 Installing
 
