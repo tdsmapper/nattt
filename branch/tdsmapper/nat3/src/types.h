@@ -2,6 +2,9 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
+#define MACADDRSIZE 6
+#define IPADDRSIZE 4
+
 #ifdef _TUN_MGR_DEBUG
 #define dprintf eprintf
 #else
@@ -116,6 +119,15 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
     unsigned char ar_hln;           /* Length of hardware address.  */
     unsigned char ar_pln;           /* Length of protocol address.  */
     unsigned short int ar_op;       /* ARP opcode (command).  */
+  };
+#define TYPE_ETHERNET 0x0001
+
+  struct arp
+  {
+    unsigned char SHA[MACADDRSIZE];
+    uint32_t SPA;
+    unsigned char THA[MACADDRSIZE];
+    uint32_t TPA;
   };
 
   /* ICMP Headers */

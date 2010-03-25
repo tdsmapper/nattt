@@ -56,7 +56,6 @@ class TunnelMgr
     uint32_t m_uMask;
     uint32_t m_uNextIP;
     uint32_t m_uListenIP;
-    bool m_bBridge;
     u_char m_pTapMac[6];
 
 /* For Windows tunnel manager only */
@@ -85,7 +84,6 @@ class TunnelMgr
               int p_iPort,
               uint32_t p_uLocalNet,
               uint32_t p_uMask,
-              bool p_bBridge,
               int p_iMaxIn,
               int p_iMaxOut,
               int p_iMaxPktIn,
@@ -101,12 +99,13 @@ class TunnelMgr
     uint32_t getMask();
     uint32_t getLocalNet();
     static uint16_t checksum(uint16_t *p_pBuff, int p_iSize);
-    static bool net_itoa(uint32_t p_uIP, char *p_szOutput);
+
 
     bool replaceIp(tun_pkt_t &);
 
 #ifdef _MSC_VER
     VOID WINAPI tapReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap);
+    VOID WINAPI tunReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap);
     VOID WINAPI listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap);
 #endif
 
@@ -118,14 +117,15 @@ class TunnelMgr
     uint32_t createNewIP();
     bool convertToFrame(tun_pkt_t &p_tPkt);
     bool writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun = false);
+    bool handleFrame(tun_pkt_t &p_tPkt); // Handle frames from the TAP device
     
-    bool handleFrame(tun_pkt_t &p_tPkt);
     HANDLE openTunInterface();
     bool tcpChecksum(char *p_pBuff);
 
 #ifndef _MSC_VER
     /* readPkt and readFrame reimplemented for Windows */
-    bool readPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun = false);
+    bool readSocketPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt);
+    bool readTunPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt);
     bool readFrame(HANDLE p_iFd, tun_pkt_t &p_tPkt);
     bool setNonblocking(int p_iFd);
 #endif

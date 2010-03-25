@@ -120,7 +120,6 @@ bool TunnelMgr::init(uint32_t p_uListenIP, uint16_t port)
               port,
               NAT3_LOCAL_NET,
               NAT3_LOCAL_NETMASK,
-              DEFAULT_BRIDGE,
               TUN_MGR_MAX_LRU,
               TUN_MGR_MAX_LRU,
               TUN_MGR_MAX_PKT_QUEUE,
@@ -131,7 +130,6 @@ bool TunnelMgr::init(uint32_t p_uListenIP,
                      int p_iPort,
                      uint32_t p_uLocalNet,
                      uint32_t p_uMask,
-                     bool p_bBridge,
                      int p_iMaxIn,
                      int p_iMaxOut,
                      int p_iMaxPktIn,
@@ -147,7 +145,6 @@ bool TunnelMgr::init(uint32_t p_uListenIP,
     // This is the local network that the tun device will use
     m_uLocalNet = p_uLocalNet;
     m_uMask     = p_uMask;
-    m_bBridge   = p_bBridge;
 
     // When we allocate IPs to tunnels, this var decides what
     // value to set next.  We set it to 0 here so that the
@@ -454,6 +451,9 @@ eprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
   return false;
 }
 
+/* Works only with IP packets.
+Writes IP packets to the ListenFD.
+*/
 bool TunnelMgr::fwdOut(tun_pkt_t &p_tPkt)
 {
   bool bRet = false;
@@ -596,7 +596,8 @@ TunnelEntry *TunnelMgr::mapOut(uint32_t p_uSrcIP, TunnelEntry *p_pEnt)
   return pRet;
 }
 
-// This does re-entrant paxket writing
+// This does re-entrant paxket writing.
+// Can write to either the TUN or the TAP device, or the ListenFd
 bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*/)
 {
   bool bRet = true;
@@ -811,6 +812,7 @@ bool TunnelMgr::setNonblocking(int p_iFd)
 
 
 #ifndef _MSC_VER
+#ifdef NAT3_TAP
 bool TunnelMgr::readFrame(HANDLE p_iFd, tun_pkt_t &p_tPkt)
 {
   bool bRet = false;
@@ -855,8 +857,10 @@ bool TunnelMgr::readFrame(HANDLE p_iFd, tun_pkt_t &p_tPkt)
   }
   return bRet;
 }
+#endif /* NAT3_TAP */
 #endif /* _MSC_VER */
 
+/* Handle a ethernet frame read from the TAP device (incomplete - linux ARP ditched). */
 bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
 {
   bool bRet = false;
@@ -955,15 +959,9 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
       char srcIP[25];
       char dstIP[25];
 
-      // TODO: Try and unify this.
-#ifdef _MSC_VER
-      net_itoa(ntohl(pIP->ip_dst.S_un.S_addr), dstIP);
-      net_itoa(ntohl(pIP->ip_src.S_un.S_addr), srcIP);
-#else
       net_itoa(ntohl(pIP->ip_dst.s_addr), dstIP);
       net_itoa(ntohl(pIP->ip_src.s_addr), srcIP);
-#endif
-        
+
       char *pTmp = new char[uLen];
       memcpy(pTmp, pIP, uLen);
       p_tPkt.m_uSize = uLen;
@@ -994,6 +992,7 @@ bool TunnelMgr::handleFrame(tun_pkt_t &p_tPkt)
   return bRet;
 }
 
+
 uint32_t TunnelMgr::getMask()
 {
   return m_uMask;
@@ -1002,29 +1001,6 @@ uint32_t TunnelMgr::getMask()
 uint32_t TunnelMgr::getLocalNet()
 {
   return m_uLocalNet;
-}
-
-// Simple helper.
-bool TunnelMgr::net_itoa(uint32_t p_uIP, char *p_szOutput)
-{
-  bool bRet = false;
-
-  if (NULL == p_szOutput)
-  {
-    eprintf("NULL output buffer.\n");
-  }
-  else
-  {
-    int iA = (p_uIP >> 24) & 0xFF;
-    int iB = (p_uIP >> 16) & 0xFF;
-    int iC = (p_uIP >> 8) & 0xFF;
-    int iD = p_uIP & 0xFF;
-
-    sprintf(p_szOutput, "%d.%d.%d.%d", iA, iB, iC, iD);
-    bRet = true;
-  }
-
-  return bRet;
 }
 
 bool TunnelMgr::makeTunnelKey(TunnelEntry &p_oEnt, std::string &p_sOutputKey)

@@ -16,9 +16,11 @@
 #include "config_file.h"
 #include "functions.h"
 #include "tun_defs.h"
+#include "pcap_arp_handler.h"
 
 /* Some globals. Avoidable? */
-uint32_t IPADDR;
+uint32_t RESOLVERADDR;
+PcapArpHandler PARP;
 
 #ifdef _MSC_VER
   DWORD dwMajorVersion = -1, dwMinorVersion = -1;
@@ -82,14 +84,14 @@ int resolver_main(uint32_t ip) {
 
 DWORD WINAPI windows_resolver_wrapper(LPVOID lParam)
 {
-	return (DWORD)resolver_main(IPADDR);
+	return (DWORD)resolver_main(RESOLVERADDR);
 }
 
 #else
 
 void *linux_bsd_resolver_wrapper(void *arg)
 {
-	return (void*)resolver_main(IPADDR);
+	return (void*)resolver_main(RESOLVERADDR);
 }
 
 #endif
@@ -117,7 +119,7 @@ bool getWindowsVersion()
 
 void* _spawnResolver(ConfigFile &f) //changed from pthread_t
 {
-  if (!locate_resolver(f, IPADDR))
+  if (!locate_resolver(f, RESOLVERADDR))
 	  return NULL;
 
 #ifndef _MSC_VER
@@ -142,59 +144,75 @@ void* _spawnResolver(ConfigFile &f) //changed from pthread_t
   return ret;
 }
 
+/* Get the mandatory TAP options */
 bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
 {
+  bool bRet = true;
   const string *tempString = f.get("tapnetaddr");
   struct in_addr addr;
   memset(&addr, 0, sizeof(addr));
 
-  // Get the address first
+  /* Get the network */
   if (NULL != tempString)
   {
     if (!inet_pton(AF_INET, tempString->c_str(), &addr))
     {
-      fprintf(stderr, "tapnetaddr is not a valid IP address\n");
-      return false;
+      fprintf(stderr, "Config File: tapnetaddr %s is not a valid IP address\n", tempString->c_str());
+      bRet = false;
     }
     else if (0 == addr.s_addr)
     {
-      fprintf(stderr, "tapnetaddr cannot be 0\n");
-      return false;
+      fprintf(stderr, "ConfigFile: tapnetaddr cannot be 0\n");
+      bRet = false;
     }
-    tapAddr = ntohl(addr.s_addr);
+    if (bRet)
+    {
+      tapAddr = ntohl(addr.s_addr);
 
-    // Get net mask
-    const string *tempString = f.get("tapnetmask");
-    if (NULL != tempString)
-    {
-      memset(&addr, 0, sizeof(addr));
-      if (!inet_pton(AF_INET, tempString->c_str(), &addr))
+      /* Get net mask */
+      const string *tempString = f.get("tapnetmask"); // redeclaration
+      if (NULL != tempString)
       {
-        fprintf(stderr, "tapnetmask is not a valid net mask\n");
-        return false;
+        memset(&addr, 0, sizeof(addr));
+        if (!inet_pton(AF_INET, tempString->c_str(), &addr))
+        {
+          fprintf(stderr, "Config File: tapnetmask %s is not a valid net mask\n", tempString->c_str());
+          bRet = false;
+        }
+        else if (0 == addr.s_addr)
+        {
+          fprintf(stderr, "Config File: tapnetmask cannot be 0\n");
+          bRet = false;
+        }
+        tapMask = ntohl(addr.s_addr);
+
+        /* Check to see that the TUN/TAP network is a network address, and NOT a device address */
+        if (tapAddr & ~tapMask)
+        {
+          eprintf("Config File: You seem to have entered a incorrect network address for "
+            "the TUN/TAP device. Please make sure you did not enter the ADDRESS of the device\n");
+          bRet = false;
+        }
       }
-      else if (0 == addr.s_addr)
+      else
       {
-        fprintf(stderr, "tapnetmask cannot be 0\n");
-        return false;
+        fprintf(stderr, "Found tapnetaddr but not tapnetmask\n");
+        bRet = false;
       }
-      tapMask = ntohl(addr.s_addr);
-    }
-    else
-    {
-      fprintf(stderr, "Found tapnetaddr but not tapnetmask\n");
-      return false;
     }
   }
   else
   {
-    tapMask = NAT3_LOCAL_NETMASK;
-    tapAddr = NAT3_LOCAL_NET;
+    bRet = false;
   }
-  return true;
+  return bRet;
 }
 
-bool get_options(ConfigFile &f, uint32_t &ip_addr, uint16_t &port, uint32_t &tapAddr, uint32_t &tapMask, bool &bBridge) {
+bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr, uint32_t &tapMask, uint32_t& natBox)
+{
+  bool bRet = false;
+  /* IP address is automatic. No more config file! */
+#if 0
   const string *ip_str = f.get("ip");
   if (ip_str == NULL) {
     fprintf(stderr, "No IP address found in configuration file\n");
@@ -207,43 +225,128 @@ bool get_options(ConfigFile &f, uint32_t &ip_addr, uint16_t &port, uint32_t &tap
     return false;
   }
   ip_addr = ntohl(ip.s_addr);
-  const string *port_str = f.get("port");
-  if (port_str == NULL) {
-    fprintf(stderr, "No port found in configuration file\n");
-    return false;
-  }
-  int p = atoi(port_str->c_str());
-  if (p < 0 || p > 65535) {
-    fprintf(stderr, "Port %s is not valid\n", port_str->c_str());
-    return false;
-  }
-  port = p;
-
-  /* The network address and mask of the TUN/TAP device. Try and get both the mask and the address (optional)*/
-  if (!get_tap_options(f, tapAddr, tapMask))
+#endif
+  const string* server_str = f.get("server");
+  if (server_str == NULL)
   {
-    return false;
+    eprintf("Config File: \"server = true/false\" missing!\n");
+    bRet = false;
+  }
+  else
+  {
+    if (server_str->compare("true") == 0)
+    {
+      server = true;
+      bRet = true;
+    }
+    else if (server_str->compare("false") == 0)
+    {
+      server = false;
+      bRet = true;
+    }
+    else
+    {
+      eprintf("Config File: unknown value for config file option \"server\" %s\n", server_str->c_str());
+      bRet = false;
+    }
   }
 
-  /* Do we need to bridge */
-  bBridge = false;
-  const string *bridgeString = f.get("bridge");
-  if (!stricmp(bridgeString->c_str(), "on"))
+  if (bRet)
   {
-    bBridge = true;
+    /* Get the port */
+    const string *port_str = f.get("port");
+    if (port_str == NULL) {
+      fprintf(stderr, "Config File: No \"port\" option found in configuration file\n");
+      bRet = false;
+    }
+    int p = atoi(port_str->c_str());
+    if (p < 0 || p > 65535) {
+      fprintf(stderr, "Config File: Port %s is not valid\n", port_str->c_str());
+      bRet = false;
+    }
+    port = p;
+
+    if (bRet)
+    {
+      /* Get the address of the NAT box */
+      struct in_addr natbox;
+      const string *natbox_str = f.get("natbox");
+      if (natbox_str == NULL)
+      {
+        eprintf("Config File: No NAT box address found in config file!\n");
+        bRet = false;
+      }
+      else if (!inet_pton(AF_INET, natbox_str->c_str(), &natbox))
+      {
+        eprintf("Config File: Nat box IP address %s incorrect!\n", natbox_str->c_str());
+        bRet = false;
+      }
+      else
+      {
+        natBox = ntohl(natbox.s_addr);
+      }
+      /* The network and mask of the TUN/TAP device. Try and get both the mask and the address (optional)*/
+      if (bRet)
+      {
+        bRet = get_tap_options(f, tapAddr, tapMask);
+      }
+    }
   }
-  
-  return true;
+  return bRet;
 }
+
+DWORD WINAPI win_pcap_arp_handler_wrapper(LPVOID lParam)
+{
+  PARP.Start();
+  return 0;
+}
+
+void* linux_pcap_arp_handler_wrapper(void* lParam)
+{
+  PARP.Start();
+  return 0;
+}
+
+void spawnPcapArpHandler()
+{
+#ifndef _MSC_VER
+  // create and launch the resolver thread
+  pthread_t *ret = new pthread_t;
+  if (pthread_create(ret, NULL, linux_pcap_arp_handler_wrapper, NULL) != 0)
+  {
+	  fprintf(stderr, "There was an error creating the resolver thread\n");
+	  delete ret;
+	  ret = NULL;
+  }
+#else
+   HANDLE ret = NULL;
+   ret = CreateThread(
+			NULL,                      // default security attributes
+			0,                         // use default stack size 
+			win_pcap_arp_handler_wrapper,  // thread function name
+			NULL,                // argument to thread function 
+			0,                         // use default creation flags 
+			0);
+#endif
+}
+
+#ifdef DEBUG
+uint32_t TAPNET = 0x0001000A;
+uint32_t TAPMASK = 0x80ffffff;
+uint32_t NATADDR = 0x0101000A;
+#endif
 
 int main(int argc, char *argv[])
 {
+  /* Config file */
   ConfigFile f;
   string config_file = "/etc/nat3.conf";
   if (argc > 1)
+  {
     config_file = argv[1];
-
-  if (!f.load(config_file)) {
+  }
+  if (!f.load(config_file))
+  {
     fprintf(stderr, "Error loading configuration file: %s\n", f.error());
     return 2;
   }
@@ -255,8 +358,7 @@ int main(int argc, char *argv[])
     eprintf("Couldnt get Windows version\n");
     return 3;
   }
-
-  if (!WSACleanup())
+  else if (!WSACleanup())
   {
     eprintf("Cleanup failed! %d\n", GetLastError());
   }
@@ -271,18 +373,35 @@ int main(int argc, char *argv[])
   uint32_t ip;
   uint16_t port;
   uint32_t tapNetmask, tapAddr;
-  bool bBridge;
-  if (!get_options(f, ip, port, tapAddr, tapNetmask, bBridge))
+  uint32_t natBox;
+  bool server;
+  if (!get_options(f, server, port, tapAddr, tapNetmask, natBox))
+  {
     return 1;
-  if (_spawnResolver(f) == NULL)
-    return 1;
+  }
 
+  PARP.QueryAdapterDetails(ip);
+  /* Server only: PCAP arp handler */
+  if (server)
+  {
+    PARP.Init(tapAddr, tapNetmask, natBox);
+    spawnPcapArpHandler();
+  }
+  /* Client only: Resolver */
+  else
+  {
+    if (_spawnResolver(f) == NULL)
+    {
+      return 1;
+    }
+  }
+
+  /* Tunnel manager */
   TunnelMgr &mgr = TunnelMgr::getInstance();
   mgr.init(ip,
     port,
     tapAddr,
     tapNetmask,
-    bBridge,
     TUN_MGR_MAX_LRU,
     TUN_MGR_MAX_LRU,
     TUN_MGR_MAX_PKT_QUEUE,

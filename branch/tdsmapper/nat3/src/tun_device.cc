@@ -58,8 +58,8 @@ bool TunDevice::setIp()
   char szIP[32], szNetmask[32];
 
   // Set the IP address.   
-  TunnelMgr::net_itoa(m_uLocalIp, szIP);
-  TunnelMgr::net_itoa(m_uNetMask, szNetmask);
+  net_itoa(m_uLocalIp, szIP);
+  net_itoa(m_uNetMask, szNetmask);
 
   // Bring up the TUN device
   // ex: ifconfig tun0 127.254.0.1 127.254.0.1 netmask 255.255.0.0

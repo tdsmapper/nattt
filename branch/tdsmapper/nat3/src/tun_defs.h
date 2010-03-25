@@ -41,9 +41,6 @@
 #define TUN_MGR_ARP_THA 18
 #define TUN_MGR_ARP_TPA 24
 
-// Default bridge behavior
-#define DEFAULT_BRIDGE false
-
 typedef struct
 {
   uint32_t m_uIP;

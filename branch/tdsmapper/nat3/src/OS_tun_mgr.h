@@ -43,6 +43,7 @@ HANDLE OS_openTapInterface();
 
   /* Callbacks for the TAP and ListenFD reads */
   VOID WINAPI TapReadCallback(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap);
+  VOID WINAPI TunReadCallback(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap);
   VOID WINAPI ListenFdReadCallback(DWORD dwErr, DWORD cbBytesRead, LPWSAOVERLAPPED lpOverLap, DWORD dwFlags);
 
 

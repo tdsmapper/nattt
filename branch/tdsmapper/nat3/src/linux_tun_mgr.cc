@@ -286,7 +286,7 @@ bool TunnelMgr::listen()
         if (m_oInboundQueue.hasRoom() && FD_ISSET(m_sListenFd, &tReadFDs))
         {
           dprintf("Reading new packet from listen FD\n");
-          if (!readPkt(m_sListenFd, m_tInReadPkt))
+          if (!readSocketPkt(m_sListenFd, m_tInReadPkt))
           {
             eprintf("Unable to read packet from inbound FD %d: %s\n", m_sListenFd, strerror(errno));
           }
@@ -298,11 +298,13 @@ bool TunnelMgr::listen()
             {
               eprintf("Couldn't set up IP addresses in header\n");
             }
+#ifdef NAT3_TAP
             else if (!convertToFrame(m_tInReadPkt))
             {
               eprintf("Unable to convert IP packet to Ethernet frame.\n");
               // destroyPkt(m_tInWritePkt);
             }
+#endif /* NAT3_TAP */
 
             // Enqueue it.
             else if (!m_oInboundQueue.enqueue(m_tInReadPkt))
@@ -319,8 +321,10 @@ bool TunnelMgr::listen()
             // is in the queue now).
             memset(&m_tInReadPkt, 0 , sizeof(m_tInReadPkt));
           }
-		  else
+          else
+          {
             dprintf("but it didn't complete\n");
+          }
         }
 
         // If there is room in the outbound queue and we have something pending on the tun FD...
@@ -329,11 +333,12 @@ bool TunnelMgr::listen()
           dprintf("Reading new packet from tun FD\n");
 
           // Get the next packet.
+          // TAP Device: Read the frame, and Handle it - ARP/IP etc
+#ifdef NAT3_TAP
           if (!readFrame(m_hTunFd, m_tOutReadPkt))
           {
-            eprintf("Unable to read packet from tun FD %d: %s\n", m_hTunFd, strerror(errno));
+            eprintf("Unable to read packet from TAP FD %d: %s\n", m_hTunFd, strerror(errno));
           }
-
           // If we have the whole packet...
           if (m_tOutReadPkt.m_bComplete)
           {
@@ -342,10 +347,26 @@ bool TunnelMgr::listen()
               eprintf("Unable to handle new frame.\n");
               destroyPkt(m_tOutReadPkt);
             }
-            // When we're done, clear the structure out, but don't free its mem (that
-            // is in the queue now).
-            memset(&m_tOutReadPkt, 0, sizeof(m_tOutReadPkt));
           }
+#else
+          // TUN Device: Read the packet, and just enqueue it
+          if (!readTunPkt(m_hTunFd, m_tOutReadPkt))
+          {
+            eprintf("Unable to read packet from tun FD %d: %s\n", m_hTunFd, strerror(errno));
+          }
+          if(m_tOutReadPkt.m_bComplete)
+          {
+            // Just enqueue. It already is an IP packet
+            if(!m_oOutboundQueue.enqueue(p_tPkt))
+            {
+              eprintf("Unable to enqueue TUN packet!\n");
+              delete[] p_tPkt.m_pData;
+            }
+          }
+#endif
+          // When we're done, clear the structure out, but don't free its mem (that
+          // is in the queue now).
+          memset(&m_tOutReadPkt, 0, sizeof(m_tOutReadPkt));
         }
       }
     }
@@ -508,9 +529,55 @@ bool TunnelMgr::configTunInterface(char *p_szDeviceName)
   return bRet;
 }
 
+
+bool TunnelMgr::readTunPkt(HANDLE p_hTun, tun_pkt_t &p_tPkt)
+{
+    bool bRet = false;
+
+  // *GROAN* Let's assume we get the whole packet in 1 read... :-/
+  if (NULL == p_tPkt.m_pData)
+  {
+    p_tPkt.m_uSize = IP_MAXPACKET;
+    p_tPkt.m_uOffset = 0;
+    p_tPkt.m_bComplete = false;
+    p_tPkt.m_pData = new char[p_tPkt.m_uSize];
+    memset(p_tPkt.m_pData, 0, p_tPkt.m_uSize);
+  }
+
+  int iErr = read(p_hTun, &(p_tPkt.m_pData[p_tPkt.m_uOffset]), p_tPkt.m_uSize - p_tPkt.m_uOffset);
+  if (iErr <= 0
+      && EAGAIN != errno
+      && EINTR != errno)
+  {
+    eprintf("Unable to read Ethernet frame: %s\n", strerror(errno));
+    destroyPkt(p_tPkt);
+  }
+  else
+  {
+    p_tPkt.m_uOffset += iErr;
+
+    // <EMO> Here's where we "ASSUME" we get the whole frame..
+    p_tPkt.m_uSize = iErr;
+    p_tPkt.m_bComplete = true;
+    // </EMO>
+
+    bRet = true;
+  }
+  if (p_tPkt.m_uOffset == p_tPkt.m_uSize)
+  {
+    p_tPkt.m_bComplete = true;
+    dprintf("Setting frame to complete...\n");
+  }
+  else
+  {
+	  dprintf("Frame incomplete.\n");
+  }
+  return bRet;
+}
+
+//TODO 
 // THis reads packets in a re-entrant fashion.
-#ifndef _MSC_VER
-bool TunnelMgr::readPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*/)
+bool TunnelMgr::readSocketPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt)
 {
   bool bRet = true;
 
@@ -641,7 +708,6 @@ bool TunnelMgr::readPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*/
 
   return bRet;
 }
-#endif /* _MSC_VER */
 
 
 #endif /* _MSC_VER */
