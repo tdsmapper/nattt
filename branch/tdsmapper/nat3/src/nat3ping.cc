@@ -21,6 +21,7 @@
 #include "tun_mgr.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 #ifdef _MSC_VER
   #pragma pack(1)
@@ -47,6 +48,8 @@
 
 int main(int argc, char *argv[])
 {
+   char logfile[] = "stderr";
+  open_log_file(logfile);
   char pBuff[20 + 12 + 52];
   uint16_t uLen = 20 + 12 + 52;
   struct ip *pIP = (struct ip *) pBuff;

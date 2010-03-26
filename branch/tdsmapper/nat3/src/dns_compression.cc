@@ -8,6 +8,7 @@
 #include "dns_name.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 using namespace std;
 

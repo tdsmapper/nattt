@@ -2,6 +2,7 @@
 
 #include "config_file.h"
 #include "tun_defs.h"
+#include "log.h"
 #include "types.h"
 #include "functions.h"
 

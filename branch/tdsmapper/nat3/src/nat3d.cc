@@ -11,12 +11,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 #include "resolver.h"
 #include "tun_mgr.h"
 #include "config_file.h"
 #include "functions.h"
 #include "tun_defs.h"
 #include "pcap_arp_handler.h"
+#include "log.h"
 
 /* Some globals. Avoidable? */
 uint32_t RESOLVERADDR;
@@ -34,7 +36,7 @@ bool locate_resolver(uint32_t &res) {
     unsigned a, b, c, d;
 
     if ((f = fopen("/etc/resolv.conf", "r")) == NULL) {
-        fprintf(stderr, "cannot open resolv.conf");
+        eprintf( "cannot open resolv.conf");
         return false;
     }
 
@@ -46,7 +48,7 @@ bool locate_resolver(uint32_t &res) {
         }
 
     fclose(f);
-    fprintf(stderr, "couldn't find nameserver line in resolv.conf");
+    eprintf( "couldn't find nameserver line in resolv.conf");
     return false;
 }
 #endif
@@ -55,13 +57,13 @@ bool locate_resolver(ConfigFile &f, uint32_t &res) {
   const string *res_string = f.get("resolver");
 
   if (res_string == NULL) {
-    fprintf(stderr, "No resolver given in configuration file\n");
+    eprintf( "No resolver given in configuration file\n");
     return false;
   }
 
   struct in_addr a;
   if (!inet_pton(AF_INET, res_string->c_str(), &a)) {
-    fprintf(stderr, "%s is not a valid IP address\n", res_string->c_str());
+    eprintf( "%s is not a valid IP address\n", res_string->c_str());
     return false;
   }
 
@@ -75,7 +77,7 @@ int resolver_main(uint32_t ip) {
   r.init(ip, 53);
 
   if (!r.listen())
-    fprintf(stderr, "There was a problem starting the resolver\n");
+    eprintf( "There was a problem starting the resolver\n");
   return NULL;
 }
 
@@ -126,7 +128,7 @@ void* _spawnResolver(ConfigFile &f) //changed from pthread_t
   // create and launch the resolver thread
   pthread_t *ret = new pthread_t;
   if (pthread_create(ret, NULL, linux_bsd_resolver_wrapper, NULL) != 0) {
-	  fprintf(stderr, "There was an error creating the resolver thread\n");
+	  eprintf( "There was an error creating the resolver thread\n");
 	  delete ret;
 	  ret = NULL;
   }
@@ -157,12 +159,12 @@ bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
   {
     if (!inet_pton(AF_INET, tempString->c_str(), &addr))
     {
-      fprintf(stderr, "Config File: tapnetaddr %s is not a valid IP address\n", tempString->c_str());
+      Eprintf( "Config File: tapnetaddr %s is not a valid IP address\n", tempString->c_str());
       bRet = false;
     }
     else if (0 == addr.s_addr)
     {
-      fprintf(stderr, "ConfigFile: tapnetaddr cannot be 0\n");
+      Eprintf( "ConfigFile: tapnetaddr cannot be 0\n");
       bRet = false;
     }
     if (bRet)
@@ -176,12 +178,12 @@ bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
         memset(&addr, 0, sizeof(addr));
         if (!inet_pton(AF_INET, tempString->c_str(), &addr))
         {
-          fprintf(stderr, "Config File: tapnetmask %s is not a valid net mask\n", tempString->c_str());
+          Eprintf( "Config File: tapnetmask %s is not a valid net mask\n", tempString->c_str());
           bRet = false;
         }
         else if (0 == addr.s_addr)
         {
-          fprintf(stderr, "Config File: tapnetmask cannot be 0\n");
+          Eprintf( "Config File: tapnetmask cannot be 0\n");
           bRet = false;
         }
         tapMask = ntohl(addr.s_addr);
@@ -189,39 +191,52 @@ bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
         /* Check to see that the TUN/TAP network is a network address, and NOT a device address */
         if (tapAddr & ~tapMask)
         {
-          eprintf("Config File: You seem to have entered a incorrect network address for "
+          Eprintf("Config File: You seem to have entered a incorrect network address for "
             "the TUN/TAP device. Please make sure you did not enter the ADDRESS of the device\n");
           bRet = false;
         }
       }
       else
       {
-        fprintf(stderr, "Found tapnetaddr but not tapnetmask\n");
+        Eprintf( "Config File: Found tapnetaddr but not tapnetmask\n");
         bRet = false;
       }
     }
   }
   else
   {
+     Eprintf("Config File: option \"tapnetaddr\" missing!\n");
     bRet = false;
   }
   return bRet;
 }
 
-bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr, uint32_t &tapMask, uint32_t& natBox)
+bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr, uint32_t &tapMask, char logFile[])
 {
   bool bRet = false;
+  /* Get the config file */
+  const string *log_file = f.get("log");
+  if (log_file == NULL)
+  {
+     Eprintf("No log file provided. Using stderr\n");
+     strcpy(logFile, "stderr");
+  }
+  else
+  {
+     strcpy(logFile, log_file->c_str());
+  }
+
   /* IP address is automatic. No more config file! */
 #if 0
   const string *ip_str = f.get("ip");
   if (ip_str == NULL) {
-    fprintf(stderr, "No IP address found in configuration file\n");
+    eprintf( "No IP address found in configuration file\n");
     return false;
   }
 
   struct in_addr ip;
   if (!inet_pton(AF_INET, ip_str->c_str(), &ip)) {
-    fprintf(stderr, "Unable to parse %s as IP address\n", ip_str->c_str());
+    eprintf( "Unable to parse %s as IP address\n", ip_str->c_str());
     return false;
   }
   ip_addr = ntohl(ip.s_addr);
@@ -229,7 +244,7 @@ bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr,
   const string* server_str = f.get("server");
   if (server_str == NULL)
   {
-    eprintf("Config File: \"server = true/false\" missing!\n");
+    Eprintf("Config File: \"server = true/false\" missing!\n");
     bRet = false;
   }
   else
@@ -246,7 +261,7 @@ bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr,
     }
     else
     {
-      eprintf("Config File: unknown value for config file option \"server\" %s\n", server_str->c_str());
+      Eprintf("Config File: unknown value for config file option \"server\" %s\n", server_str->c_str());
       bRet = false;
     }
   }
@@ -256,40 +271,20 @@ bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr,
     /* Get the port */
     const string *port_str = f.get("port");
     if (port_str == NULL) {
-      fprintf(stderr, "Config File: No \"port\" option found in configuration file\n");
+      Eprintf( "Config File: No \"port\" option found in configuration file\n");
       bRet = false;
     }
     int p = atoi(port_str->c_str());
     if (p < 0 || p > 65535) {
-      fprintf(stderr, "Config File: Port %s is not valid\n", port_str->c_str());
+      Eprintf( "Config File: Port %s is not valid\n", port_str->c_str());
       bRet = false;
     }
     port = p;
 
     if (bRet)
     {
-      /* Get the address of the NAT box */
-      struct in_addr natbox;
-      const string *natbox_str = f.get("natbox");
-      if (natbox_str == NULL)
-      {
-        eprintf("Config File: No NAT box address found in config file!\n");
-        bRet = false;
-      }
-      else if (!inet_pton(AF_INET, natbox_str->c_str(), &natbox))
-      {
-        eprintf("Config File: Nat box IP address %s incorrect!\n", natbox_str->c_str());
-        bRet = false;
-      }
-      else
-      {
-        natBox = ntohl(natbox.s_addr);
-      }
-      /* The network and mask of the TUN/TAP device. Try and get both the mask and the address (optional)*/
-      if (bRet)
-      {
-        bRet = get_tap_options(f, tapAddr, tapMask);
-      }
+       /* The network and mask of the TUN/TAP device. Try and get both the mask and the address (optional)*/
+       bRet = get_tap_options(f, tapAddr, tapMask);
     }
   }
   return bRet;
@@ -317,7 +312,7 @@ void spawnPcapArpHandler()
   pthread_t *ret = new pthread_t;
   if (pthread_create(ret, NULL, linux_pcap_arp_handler_wrapper, NULL) != 0)
   {
-	  fprintf(stderr, "There was an error creating the resolver thread\n");
+	  eprintf( "There was an error creating the resolver thread\n");
 	  delete ret;
 	  ret = NULL;
   }
@@ -339,8 +334,10 @@ uint32_t TAPMASK = 0x80ffffff;
 uint32_t NATADDR = 0x0101000A;
 #endif
 
+
 int main(int argc, char *argv[])
 {
+
   /* Config file */
   ConfigFile f;
   string config_file = "/etc/nat3.conf";
@@ -350,9 +347,20 @@ int main(int argc, char *argv[])
   }
   if (!f.load(config_file))
   {
-    fprintf(stderr, "Error loading configuration file: %s\n", f.error());
+    Eprintf( "Error loading configuration file: %s\n", f.error());
     return 2;
   }
+  uint32_t ip;
+  uint16_t port;
+  uint32_t tapNetmask, tapAddr;
+  bool server;
+  char logFile[256];
+  if (!get_options(f, server, port, tapAddr, tapNetmask, logFile))
+  {
+    return 1;
+  }
+
+  open_log_file(logFile);
 
   /* Windows WSAStartup - before resolver or tun_mgr */
 #ifdef _MSC_VER
@@ -373,21 +381,12 @@ int main(int argc, char *argv[])
   }
 #endif /* _MSC_VER */
     
-  uint32_t ip;
-  uint16_t port;
-  uint32_t tapNetmask, tapAddr;
-  uint32_t natBox;
-  bool server;
-  if (!get_options(f, server, port, tapAddr, tapNetmask, natBox))
-  {
-    return 1;
-  }
-
+   printf("Welcome to NAT3D.\n");
   PARP.QueryAdapterDetails(ip);
   /* Server only: PCAP arp handler */
   if (server)
   {
-    PARP.Init(tapAddr, tapNetmask, natBox);
+    PARP.Init(tapAddr, tapNetmask);
     spawnPcapArpHandler();
   }
   /* Client only: Resolver */

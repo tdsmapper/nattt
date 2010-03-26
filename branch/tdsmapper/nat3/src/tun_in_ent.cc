@@ -3,6 +3,7 @@
 #include "tun_mgr.h"
 #include "tun_in_ent.h"
 #include "types.h"
+#include "log.h"
 #include "functions.h"
 
 

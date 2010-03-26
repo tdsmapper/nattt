@@ -3,6 +3,8 @@
 #ifndef __FUNCTIONS_H__
 #define __FUNCTIONS_H__
 #include "types.h"
+#include <stdio.h>
+
 
 /* Windows only functions */
 #ifdef _MSC_VER

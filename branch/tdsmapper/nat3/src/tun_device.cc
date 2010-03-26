@@ -17,6 +17,7 @@
 
 #include "tun_defs.h"
 #include "tun_device.h"
+#include "log.h"
 
 using namespace std;
 
@@ -148,7 +149,7 @@ int LinuxTunDevice::openDev(uint32_t uLocalIp,
                ifr.ifr_name);
       if (!strlen(m_szDevName))
       {
-        fprintf(stderr, 
+        eprintf( 
                 "%s [%d] - Failed to get device interface for (%s): %s\n",
             __FILE__,
             __LINE__,
@@ -160,7 +161,7 @@ int LinuxTunDevice::openDev(uint32_t uLocalIp,
       else if (!setIp())
       {
         fd = -1;
-        fprintf(stderr, "%s [%d] - Unable to set IP address on (%s): %s\n",
+        eprintf( "%s [%d] - Unable to set IP address on (%s): %s\n",
                 __FILE__,
                 __LINE__,
                 LINUX_TUN_DEVICE_PATH,
@@ -169,7 +170,7 @@ int LinuxTunDevice::openDev(uint32_t uLocalIp,
       else if (!setMtu()) // Set device MTU
       {
         fd = -1;
-        fprintf(stderr,
+        eprintf(
                 "%s [%d] - Unable to set MTU on (%s): %s\n",
                  __FILE__,
                  __LINE__,
@@ -179,7 +180,7 @@ int LinuxTunDevice::openDev(uint32_t uLocalIp,
       else if (!addLocalRoute()) // Set up local routes
       {
         fd = -1;
-        fprintf(stderr,
+        eprintf(
                 "%s [%d] - Unable to add local route on device (%s): %s\n",
                 __FILE__,
                 __LINE__,
@@ -190,7 +191,7 @@ int LinuxTunDevice::openDev(uint32_t uLocalIp,
     }
     else
     {
-      fprintf(stderr, 
+      eprintf( 
               "%s [%d] - Unable to execute ioctl on device (%s): %s\n",
               __FILE__,
               __LINE__,
@@ -202,7 +203,7 @@ int LinuxTunDevice::openDev(uint32_t uLocalIp,
   }
   else
   {
-    fprintf(stderr, "%s [%d] - Unable to open TUN/TAP device (%s): %s\n",
+    eprintf( "%s [%d] - Unable to open TUN/TAP device (%s): %s\n",
             __FILE__,
             __LINE__,
             LINUX_TUN_DEVICE_PATH,
@@ -281,7 +282,7 @@ int DarwinTunDevice::openDev(uint32_t uLocalIp,
     sprintf(m_szDevName, "tun%d", i);
     if (!strlen(m_szDevName))
     {
-      fprintf(stderr,
+      eprintf(
               "%s [%d] - Failed to get device interface for (%s): %s\n",
           __FILE__,
           __LINE__,
@@ -293,7 +294,7 @@ int DarwinTunDevice::openDev(uint32_t uLocalIp,
     else if (!setIp())
     {
       fd = -1;
-      fprintf(stderr, "%s [%d] - Unable to set IP address on (%s): %s\n",
+      eprintf( "%s [%d] - Unable to set IP address on (%s): %s\n",
               __FILE__,
               __LINE__,
               LINUX_TUN_DEVICE_PATH,
@@ -302,7 +303,7 @@ int DarwinTunDevice::openDev(uint32_t uLocalIp,
     else if (!setMtu()) // Set device MTU
     {
       fd = -1;
-      fprintf(stderr,
+      eprintf(
               "%s [%d] - Unable to set MTU on (%s): %s\n",
                __FILE__,
                __LINE__,
@@ -312,7 +313,7 @@ int DarwinTunDevice::openDev(uint32_t uLocalIp,
     else if (!addLocalRoute()) // Set up local routes
     {
       fd = -1;
-      fprintf(stderr,
+      eprintf(
               "%s [%d] - Unable to add local route on device (%s): %s\n",
               __FILE__,
               __LINE__,
@@ -322,7 +323,7 @@ int DarwinTunDevice::openDev(uint32_t uLocalIp,
   }      
   else
   {
-    fprintf(stderr, "%s [%d] - Unable to find free TUN device : %s\n",
+    eprintf( "%s [%d] - Unable to find free TUN device : %s\n",
            __FILE__,
            __LINE__,
            strerror(errno));

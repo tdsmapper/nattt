@@ -13,11 +13,10 @@ private:
   uint32_t m_uInterfaceIP;
   uint32_t m_uTuntapMask;
   uint32_t m_uTuntapNet;
-  uint32_t m_uNatAddr;
 
   bool setPcapFilter();
 public:
-  bool Init(uint32_t &p_uTuntapAddress, uint32_t &p_uTuntapMask,  uint32_t &p_uNatAddress);
+  bool Init(uint32_t &p_uTuntapAddress, uint32_t &p_uTuntapMask);
   bool QueryAdapterDetails(uint32_t &ip);
   void Start();
 };

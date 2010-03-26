@@ -5,6 +5,7 @@
 #include "tun_queue.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 using namespace std;
 
@@ -33,7 +34,7 @@ bool TunnelQueue::init(int p_iMaxSize /*= 0*/)
 
   if (p_iMaxSize < 0)
   {
-    fprintf(stderr, "%s [%d] - Max size for queue must be >= 0, but is specified as: %d\n",
+    eprintf( "%s [%d] - Max size for queue must be >= 0, but is specified as: %d\n",
             __FILE__,
             __LINE__,
             p_iMaxSize);
@@ -78,7 +79,7 @@ bool TunnelQueue::dequeue(tun_pkt_t &p_tPkt)
     m_iSize--;
     if (m_iSize < 0)
     {
-      fprintf(stderr, "%s [%d] - Internal consistency error.  Queue is size: %d\n",
+      eprintf( "%s [%d] - Internal consistency error.  Queue is size: %d\n",
               __FILE__,
               __LINE__,
               m_iSize);

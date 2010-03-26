@@ -3,11 +3,11 @@ PROG = nat3d
 CC =    gcc
 CXX =    g++
 CFLAGS =  -g -O2  -DHAVE_CONFIG_H
-LDFLAGS =  
+LDFLAGS =  -lpcap 
 DEFINES = -DHAVE_CONFIG_H
 
 CFLAGS += -Wall -Werror -D_REENTRANT
-CFLAGS += -g
+CFLAGS += -DDEBUG -g
 
 CXXFLAGS += $(CFLAGS)
 

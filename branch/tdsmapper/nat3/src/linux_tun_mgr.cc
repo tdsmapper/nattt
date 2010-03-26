@@ -66,6 +66,7 @@
 #include "OS_tun_mgr.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 
 
@@ -234,7 +235,7 @@ bool TunnelMgr::listen()
             dprintf("Writing unfinished packet to tun FD: 0x%x : %u\n",m_tInWritePkt.m_uIP, m_tInWritePkt.m_uPort);
             if (!writePkt(m_hTunFd, m_tInWritePkt, true))
             {
-              eprintf("Unable to write frame.\n");
+              dprintf("Unable to write frame.\n");
             }
             destroyPkt(m_tInWritePkt);
           }
@@ -244,11 +245,11 @@ bool TunnelMgr::listen()
             dprintf("Writing new packet to tun FD\n");
             if (!m_oInboundQueue.dequeue(m_tInWritePkt))
             {
-              eprintf("Unable to dequeue packet from inbound queue.\n");
+              dprintf("Unable to dequeue packet from inbound queue.\n");
             }
             else if (!writePkt(m_hTunFd, m_tInWritePkt, true))
             {
-              eprintf("Unable to write frame.\n");
+              dprintf("Unable to write frame.\n");
             }
             destroyPkt(m_tInWritePkt);
           }
@@ -264,7 +265,7 @@ bool TunnelMgr::listen()
             dprintf("Writing unfinished packet to listen FD\n");
             if (!fwdOut(m_tOutWritePkt))
             {
-              eprintf("Unable to fwdOut()\n");
+              dprintf("Unable to fwdOut()\n");
             }
           }
           // Otherwise, dequeue the next packet.
@@ -273,11 +274,11 @@ bool TunnelMgr::listen()
             dprintf("Writing new packet to listen FD\n");
             if (!m_oOutboundQueue.dequeue(m_tOutWritePkt))
             {
-              eprintf("Unable to dequeue packet from outbound queue.\n");
+              dprintf("Unable to dequeue packet from outbound queue.\n");
             }
             else if (!fwdOut(m_tOutWritePkt))
             {
-              eprintf("Unable to fwdOut()\n");
+              dprintf("Unable to fwdOut()\n");
             }
           }
         }
@@ -288,7 +289,7 @@ bool TunnelMgr::listen()
           dprintf("Reading new packet from listen FD\n");
           if (!readSocketPkt(m_sListenFd, m_tInReadPkt))
           {
-            eprintf("Unable to read packet from inbound FD %d: %s\n", m_sListenFd, strerror(errno));
+            dprintf("Unable to read packet from inbound FD %d: %s\n", m_sListenFd, strerror(errno));
           }
 
           // If we have the whole packet...
@@ -296,12 +297,12 @@ bool TunnelMgr::listen()
           {
             if (!replaceIp(m_tInReadPkt))
             {
-              eprintf("Couldn't set up IP addresses in header\n");
+              dprintf("Couldn't set up IP addresses in header\n");
             }
 #ifdef NAT3_TAP
             else if (!convertToFrame(m_tInReadPkt))
             {
-              eprintf("Unable to convert IP packet to Ethernet frame.\n");
+              dprintf("Unable to convert IP packet to Ethernet frame.\n");
               // destroyPkt(m_tInWritePkt);
             }
 #endif /* NAT3_TAP */
@@ -309,7 +310,7 @@ bool TunnelMgr::listen()
             // Enqueue it.
             else if (!m_oInboundQueue.enqueue(m_tInReadPkt))
             {
-              eprintf("Unable to enqueue inbound packet.\n");
+              dprintf("Unable to enqueue inbound packet.\n");
               delete[] m_tInReadPkt.m_pData;
             }
             else
@@ -337,14 +338,14 @@ bool TunnelMgr::listen()
 #ifdef NAT3_TAP
           if (!readFrame(m_hTunFd, m_tOutReadPkt))
           {
-            eprintf("Unable to read packet from TAP FD %d: %s\n", m_hTunFd, strerror(errno));
+            dprintf("Unable to read packet from TAP FD %d: %s\n", m_hTunFd, strerror(errno));
           }
           // If we have the whole packet...
           if (m_tOutReadPkt.m_bComplete)
           {
             if (!handleFrame(m_tOutReadPkt)) // handleFrame changed to not enqueue
             {
-              eprintf("Unable to handle new frame.\n");
+              dprintf("Unable to handle new frame.\n");
               destroyPkt(m_tOutReadPkt);
             }
           }
@@ -352,14 +353,14 @@ bool TunnelMgr::listen()
           // TUN Device: Read the packet, and just enqueue it
           if (!readTunPkt(m_hTunFd, m_tOutReadPkt))
           {
-            eprintf("Unable to read packet from tun FD %d: %s\n", m_hTunFd, strerror(errno));
+            dprintf("Unable to read packet from tun FD %d: %s\n", m_hTunFd, strerror(errno));
           }
           if(m_tOutReadPkt.m_bComplete)
           {
             // Just enqueue. It already is an IP packet
             if(!m_oOutboundQueue.enqueue(m_tOutReadPkt))
             {
-              eprintf("Unable to enqueue TUN packet!\n");
+              dprintf("Unable to enqueue TUN packet!\n");
               delete[] m_tOutReadPkt.m_pData;
             }
           }
@@ -422,7 +423,7 @@ bool TunnelMgr::configTunInterface(char *p_szDeviceName)
     }
     else 
     {
-      eprintf("Unable to bring up interface (%s): %s\n", p_szDeviceName, strerror(errno));    
+      dprintf("Unable to bring up interface (%s): %s\n", p_szDeviceName, strerror(errno));    
       bRet = false;
     }
   }
@@ -435,7 +436,7 @@ bool TunnelMgr::configTunInterface(char *p_szDeviceName)
     iStatus = system(szIfconfigCall);
     if (0 != iStatus)
     {
-      eprintf("Unable to set local route...\n");
+      dprintf("Unable to set local route...\n");
       bRet = false;
     }
   }
@@ -549,7 +550,7 @@ bool TunnelMgr::readTunPkt(HANDLE p_hTun, tun_pkt_t &p_tPkt)
       && EAGAIN != errno
       && EINTR != errno)
   {
-    eprintf("Unable to read Ethernet frame: %s\n", strerror(errno));
+    dprintf("Unable to read Ethernet frame: %s\n", strerror(errno));
     destroyPkt(p_tPkt);
   }
   else
@@ -600,7 +601,7 @@ bool TunnelMgr::readSocketPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt)
 
     if (iCount <= 0 && EAGAIN != errno)
     {
-      eprintf("Unable to get header from socket %d: %s\n", p_iFd, strerror(errno));
+      dprintf("Unable to get header from socket %d: %s\n", p_iFd, strerror(errno));
       delete[] p_tPkt.m_pData;
       p_tPkt.m_pData = NULL;
       bRet = false;
@@ -608,7 +609,7 @@ bool TunnelMgr::readSocketPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt)
     // We need to get AT LEAST the IP header.
     else if ((int) sizeof(struct ip) > iCount)
     {
-      eprintf("Unable to get IP header from socket.  Only got: %d bytes.\n", iCount);
+      dprintf("Unable to get IP header from socket.  Only got: %d bytes.\n", iCount);
       delete[] p_tPkt.m_pData;
       p_tPkt.m_pData = NULL;
       bRet = false;
@@ -673,7 +674,7 @@ bool TunnelMgr::readSocketPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt)
         && EINTR != errno
         && EAGAIN != errno)
     {
-      eprintf("Unable to read from socket %d: %s\n", p_iFd, strerror(errno));
+      dprintf("Unable to read from socket %d: %s\n", p_iFd, strerror(errno));
       destroyPkt(p_tPkt);
       bRet = false;
     }
@@ -699,7 +700,7 @@ bool TunnelMgr::readSocketPkt(HANDLE p_iFd, tun_pkt_t &p_tPkt)
     // Sanity check, is this the right version right?
     if (4 != pIpHdr->ip_v)
     {
-      eprintf("Version of header is not 4 is '%d', aborting.\n", pIpHdr->ip_v);
+      dprintf("Version of header is not 4 is '%d', aborting.\n", pIpHdr->ip_v);
 
       destroyPkt(p_tPkt);
       bRet = false;

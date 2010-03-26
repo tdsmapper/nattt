@@ -22,6 +22,7 @@
 #include "tun_out_ent.h"
 #include "tun_mgr.h"
 #include "types.h"
+#include "log.h"
 
 class TestTunnelMgr : public TunnelMgr
 {
@@ -438,6 +439,8 @@ bool TestTunnelMgr::testMakeTunnelKey()
 
 int main(int argc, char *argv[])
 {
+   char logfile[] = "stderr";
+  open_log_file(logfile);
   TunnelMgr::getInstance().init(0x7f000001, NAT3_DEFAULT_PORT);
   TestTunnelMgr oMgr;
 

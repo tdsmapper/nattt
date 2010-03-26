@@ -21,6 +21,7 @@
 #include "tun_in_ent.h"
 #include "tun_out_ent.h"
 #include "functions.h"
+#include "log.h"
 
 /* From nat3d.cc: Windows major and minor versions */
 extern DWORD dwMajorVersion, dwMinorVersion;
@@ -119,7 +120,7 @@ bool SearchForDeviceGuid(HKEY hKey, __out TCHAR szGUID[])
 									size_t strlength;
 									HRESULT hr = StringCchLength(szValue, STRSAFE_MAX_CCH, &strlength);
 									StringCchCopy(szGUID, strlength+1, szValue);
-                  eprintf("The dev GUID is %s\n", szGUID);
+                           eprintf("The dev GUID is %s\n", szGUID);
 									bRet = true;
 									break;
 								}
@@ -161,73 +162,73 @@ bool GetDeviceHumanName(TCHAR szGuid[], TCHAR szHumanName[])
 			if (lRet == ERROR_SUCCESS)
 			{
 				StringCchCopy(szHumanName, 255, szValue);
-        eprintf("The device name is %s\n", szHumanName);
-        bRet = true;
-			}
-		}
-		RegCloseKey(hKey);
-	}
+               eprintf("The device name is %s\n", szHumanName);
+               bRet = true;
+         }
+      }
+      RegCloseKey(hKey);
+   }
   return bRet;
 }
 
 /* Get the GUID of the TAP device */
 bool GetDeviceGuid(__out TCHAR guid[])
 {
-	bool bRet = false;
-	LONG lRet;
-	HKEY hKey;
-	lRet = RegOpenKeyEx (HKEY_LOCAL_MACHINE, TAP_DEV_CLASS, 0L, KEY_READ , &hKey);
-	if(lRet == ERROR_SUCCESS)
-	{
-		if (SearchForDeviceGuid(hKey, guid))
-		{
-			bRet = true;
-		}
-	}
-	RegCloseKey(hKey);
-	return bRet;
+   bool bRet = false;
+      LONG lRet;
+      HKEY hKey;
+      lRet = RegOpenKeyEx (HKEY_LOCAL_MACHINE, TAP_DEV_CLASS, 0L, KEY_READ , &hKey);
+      if(lRet == ERROR_SUCCESS)
+      {
+         if (SearchForDeviceGuid(hKey, guid))
+         {
+            bRet = true;
+         }
+      }
+   RegCloseKey(hKey);
+      return bRet;
 }
 
 static UINT TAP_CONTROL_CODE(UINT request, UINT method)
 {
-	return CTL_CODE(FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS);
+   return CTL_CODE(FILE_DEVICE_UNKNOWN, request, method, FILE_ANY_ACCESS);
 }
 
 /* Todo: Make code better and make it call SetIpNetEntry() only when required */
 bool GetAndUpdateArpEntry(ULONG uIp, char macaddr[], UINT uMacAddrSize)
 {
-  bool bRet = false;
-  /*Quoting:
-  >= Windows Vista: SendArp updates system ARP table
-  <= Windows 2003 : SendArp just sends a request. Need to update table manually
-  */
-  ULONG size = uMacAddrSize;
-  // Windows 2003 and lesser - got to test to see if its faster retrieving ARP table (GetIpNetTable), 
-  // searching for entry AND then either call SetIpNetEntry or CreateIpNetEntry.
-  // Deferred to a later date due to lack of system availability
-  if (NO_ERROR == SendARP(uIp, 0, (PULONG)macaddr, &size))
-  {
-    bRet = true;
-    
-    /* Less than Windows Vista i.e. Windows 2003 */
-    //if (dwMajorVersion > 6) 
-    //{
-    //  MIB_IPNETROW arpRow;
-    //  memcpy(arpRow.bPhysAddr, macaddr, uMacAddrSize);
-    //  arpRow.dwAddr        = uIp;
-    //  arpRow.dwPhysAddrLen = uMacAddrSize;
-    //  arpRow.dwType        = MIB_IPNET_TYPE_DYNAMIC;
-    //    DWORD dwRet;
-    //    dwRet = GetAdapterIndex(wszAdapterName, &arpRow.dwIndex);
-    //    if (NO_ERROR == dwRet)
-    //    {
-    //      if (NO_ERROR == SetIpNetEntry(&arpRow))
-    //      {
-    //        bRet = true;
-    //      }
-    //      else
-    //      {
-    //        eprintf("ARP entry not set %d\n", GetLastError());
+   bool bRet = false;
+   /*Quoting:
+     >= Windows Vista: SendArp updates system ARP table
+     <= Windows 2003 : SendArp just sends a request. Need to update table manually
+    */
+   ULONG size = uMacAddrSize;
+   // Windows 2003 and lesser - got to test to see if its faster retrieving ARP table (GetIpNetTable), 
+   // searching for entry AND then either call SetIpNetEntry or CreateIpNetEntry.
+   // Deferred to a later date due to lack of system availability
+   if (NO_ERROR == SendARP(uIp, 0, (PULONG)macaddr, &size))
+   {
+      bRet = true;
+
+      /* Less than Windows Vista i.e. Windows 2003 */
+      //if (dwMajorVersion > 6) 
+      //{
+      //  MIB_IPNETROW arpRow;
+      //  memcpy(arpRow.bPhysAddr, macaddr, uMacAddrSize);
+      //  arpRow.dwAddr        = uIp;
+      //  arpRow.dwPhysAddrLen = uMacAddrSize;
+      //  arpRow.dwType        = MIB_IPNET_TYPE_DYNAMIC;
+      //    DWORD dwRet;
+      //    dwRet = GetAdapterIndex(wszAdapterName, &arpRow.dwIndex);
+      //    if (NO_ERROR == dwRet)
+      //    {
+      //      if (NO_ERROR == SetIpNetEntry(&arpRow))
+      //      {
+      //        bRet = true;
+      //      }
+      //      else
+      //      {
+      //        eprintf("ARP entry not set %d\n", GetLastError());
     //      }
     //    }
     //    else
@@ -328,7 +329,7 @@ bool TunnelMgr::configTunInterface(char *p_szDevice)  // p_szDevice is not neede
     &nLen, 
     0))
   {
-    fprintf(stderr, "Error %d: Unable to get the MAC address of the TAP device."
+    eprintf( "Error %d: Unable to get the MAC address of the TAP device."
       " Please contact the developer if this problem persists\n", GetLastError());
   }
 
@@ -342,7 +343,7 @@ bool TunnelMgr::configTunInterface(char *p_szDevice)  // p_szDevice is not neede
       &nLen, 
       NULL)) 
   {
-    fprintf(stderr, "Error %d: Unable to get the MTU for the TAP device. "
+    eprintf( "Error %d: Unable to get the MTU for the TAP device. "
       "Please contact the developers if this error persists. \n", GetLastError());
 	}
 
@@ -383,7 +384,7 @@ bool TunnelMgr::configTunInterface(char *p_szDevice)  // p_szDevice is not neede
         {
           if (ENOENT == dwLastError)
           {
-            fprintf(stderr, "Error %d: netsh interface call failed!\n", dwLastError);
+            eprintf( "Error %d: netsh interface call failed!\n", dwLastError);
           }
           else
           {
@@ -392,7 +393,7 @@ bool TunnelMgr::configTunInterface(char *p_szDevice)  // p_szDevice is not neede
         }
         else if (-1 == iRet)
         {
-          fprintf(stderr, "Error %d: netsh interface call failed!\n", GetLastError());
+          eprintf( "Error %d: netsh interface call failed!\n", GetLastError());
         }
         else
         {
@@ -533,7 +534,7 @@ VOID WINAPI TunnelMgr::tapReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, L
   // Part 1. Read Frame from TAP device
   if (0)
   {
-    eprintf("Grabbed a frame of size %d for %x.%x.%x.%x.%x.%x\n",
+    dprintf("Grabbed a frame of size %d for %x.%x.%x.%x.%x.%x\n",
       cbBytesRead, m_tOutReadPkt.m_pData[0], m_tOutReadPkt.m_pData[1], m_tOutReadPkt.m_pData[2],
       m_tOutReadPkt.m_pData[3], m_tOutReadPkt.m_pData[4], m_tOutReadPkt.m_pData[5]);
   }
@@ -542,7 +543,7 @@ VOID WINAPI TunnelMgr::tapReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, L
 
   if (0 != dwErr) // error
   {
-    eprintf("Did not read TAP frame due to %d", GetLastError());
+    dprintf("Did not read TAP frame due to %d", GetLastError());
     destroyPkt(m_tOutReadPkt);
   }
   else
@@ -562,7 +563,7 @@ VOID WINAPI TunnelMgr::tapReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, L
     }
     else
     {
-      eprintf("Other error with read : %d\n", dwOtherError);
+      dprintf("Other error with read : %d\n", dwOtherError);
       abort(); // TzODO: This is for testing. Remove it.
     }
   }
@@ -595,7 +596,7 @@ VOID WINAPI TunnelMgr::tapReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, L
     &tuntapOverlapped,
     TapReadCallback))
   {
-    eprintf("ReadFileEx() failed with %d. Aborting.\n", GetLastError());
+    dprintf("ReadFileEx() failed with %d. Aborting.\n", GetLastError());
     abort();
   }
 }
@@ -607,20 +608,19 @@ VOID WINAPI TunnelMgr::tunReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, L
   assert (cbBytesRead <= IP_MAXPACKET);
   struct ip* pIpHdr = (struct ip*)m_tOutReadPkt.m_pData; 
   // Part 1. Read Frame from TAP device
-#if 0
+
     char ipsrc[20], ipdst[20];
     struct in_addr sin1;
     net_itoa(pIpHdr->ip_dst.s_addr, ipdst);
     net_itoa(pIpHdr->ip_src.s_addr, ipsrc);
-    eprintf("Grabbed a packet of size %d from %s->%s\n", cbBytesRead, ipdst, ipsrc);
-#endif /* 0 */
+    dprintf("Grabbed a packet of size %d from %s->%s\n", cbBytesRead, ipdst, ipsrc);
 
   bool bPart1Success = false;
   m_tOutReadPkt.m_bComplete = false; // false always
 
   if (0 != dwErr) // error
   {
-    eprintf("Did not read TUN frame due to %d", GetLastError());
+    dprintf("Did not read TUN frame due to %d", GetLastError());
     destroyPkt(m_tOutReadPkt);
   }
   else
@@ -636,7 +636,7 @@ VOID WINAPI TunnelMgr::tunReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead, L
     }
     else
     {
-      eprintf("Other error with read : %d\n", dwOtherError);
+      dprintf("Other error with read : %d\n", dwOtherError);
       abort(); // TzODO: This is for testing. Remove it.
     }
   }
@@ -700,13 +700,13 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
           {
             char szIP[16];
             net_itoa(m_tInReadPkt.m_uIP, szIP);
-            eprintf("readpkt IP:%s Port:%u\n", szIP, m_tInReadPkt.m_uPort);		
+            dprintf("readpkt IP:%s Port:%u\n", szIP, m_tInReadPkt.m_uPort);		
           }
           m_tInReadPkt.m_uOffset = cbBytesRead;
           m_tInReadPkt.m_uSize   = ntohs(pIpHdr->ip_len);
           {
-            eprintf("readpkt offset:%u\n", (unsigned int)m_tInReadPkt.m_uOffset);
-            eprintf("readpkt size:%u\n",   (unsigned int)m_tInReadPkt.m_uSize);
+            dprintf("readpkt offset:%u\n", (unsigned int)m_tInReadPkt.m_uOffset);
+            dprintf("readpkt size:%u\n",   (unsigned int)m_tInReadPkt.m_uSize);
           }
 
           // Did we get the whole packet
@@ -716,7 +716,7 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
             m_tInReadPkt.m_bComplete = true;
             if (4 != pIpHdr->ip_v)
             {
-              eprintf("Version of header is not 4 is '%d', dropping.\n", pIpHdr->ip_v);
+              dprintf("Version of header is not 4 is '%d', dropping.\n", pIpHdr->ip_v);
               bSuccess = false;
             }
           }
@@ -740,7 +740,7 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
     else
     {
       m_tInReadPkt.m_bComplete = false;
-      eprintf("ListenFDRead: Error %d\n", dwLastError);
+      dprintf("ListenFDRead: Error %d\n", dwLastError);
     }
 
     /*
@@ -753,14 +753,14 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
       // Replace the IP and set it up with a local IP address on the TUN device
       if (!replaceIp(m_tInReadPkt))
       {
-        eprintf("Packet replaceip failed!\n");
+        dprintf("Packet replaceip failed!\n");
         bSuccess = false;
       }
 #ifdef NAT3_TAP
       // Convert to frame to send on TAP device
       else if (!convertToFrame(m_tInReadPkt))
       {
-        eprintf("Packet conversion to frame failed!\n");
+        dprintf("Packet conversion to frame failed!\n");
         bSuccess = false;
       }
 #endif /* NAT3_TAP */
@@ -790,7 +790,7 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
   // Some error; drop the packet
   else
   {
-    eprintf("listenReadCompleteRoutine: error %d/%d\n", dwErr, GetLastError());
+    dprintf("listenReadCompleteRoutine: error %d/%d\n", dwErr, GetLastError());
   }
 
   // Full packet not received, and (partial) read was successful:  Read whatever remains
@@ -825,7 +825,7 @@ VOID WINAPI TunnelMgr::listenReadCompletedRoutine(DWORD dwErr, DWORD cbBytesRead
   {
     if (WSAGetLastError() != ERROR_IO_PENDING)
     {
-      eprintf("WSARecvFrom failed with %d\n", GetLastError());
+      dprintf("WSARecvFrom failed with %d\n", GetLastError());
       abort();
     }
   }

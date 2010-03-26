@@ -4,6 +4,7 @@
 #include "tun_out_ent.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 TunnelOutboundEntry::TunnelOutboundEntry()
 {

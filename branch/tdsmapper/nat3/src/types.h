@@ -5,14 +5,6 @@
 #define MACADDRSIZE 6
 #define IPADDRSIZE 4
 
-#ifdef _TUN_MGR_DEBUG
-#define dprintf eprintf
-#else
-#define dprintf(...) do { } while(0)
-#endif
-
-#define eprintf(X, ...) fprintf(stderr, __FILE__ " [%d] - "  X, __LINE__, ##__VA_ARGS__)
-
 #ifdef _MSC_VER
   #include <Winsock2.h>
   #include <Windows.h>

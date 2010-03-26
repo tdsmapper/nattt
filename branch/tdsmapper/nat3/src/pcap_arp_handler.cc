@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "pcap_arp_handler.h"
 #include "pcap.h"
+#include "log.h"
 #include "functions.h"
 #include "types.h"
 #include <string.h>
@@ -46,6 +47,8 @@ bool PcapArpHandler::setPcapFilter()
   char *pszHostIP = inet_ntoa(inIpAddr);
   strcat(szFilterExp, pszHostIP);
 
+#if 0
+  // Mothballed for potential future use
   // Handle ARP for everyone except the NAT box/router (assumed to be Net Addreess + 1. i.e. 10.0.0.1)
   // Check if the NAT box is on the same network as TUN/TAP device.
   // Then in that case, ignore the ARP request for the NAT box alone.
@@ -56,6 +59,7 @@ bool PcapArpHandler::setPcapFilter()
     strcat(szFilterExp, " and not arp dst host ");
     strcat(szFilterExp, pszNatIP);
   }
+#endif
 
   eprintf("The filter applied is %s\n", szFilterExp);
 
@@ -85,76 +89,79 @@ bool PcapArpHandler::QueryAdapterDetails(uint32_t &ip)
   // retrieve the adapters from the computer
   if (pcap_findalldevs(&allAdapters, errorBuffer) == -1)
   {
-    fprintf(stderr, "Error in pcap_findalldevs_ex function: %s\n", errorBuffer);
-    bRet = false;
+     printf("There was an error starting the application. Please consult the log file!\n");
+     eprintf( "Error in pcap_findalldevs_ex function: %s\n", errorBuffer);
+     bRet = false;
   }
   else if(allAdapters == NULL)
   {
-    printf("\nNo adapters found! Make sure WinPcap is installed.\n");
-    bRet = false;
+     printf("\nNo adapters found! Make sure WinPcap is installed.\n");
+     bRet = false;
   }
   else
   {
-    // print the list of adapters along with basic information about an adapter
-    int crtAdapter = 0;
-    for (adapter = allAdapters; adapter != NULL; adapter = adapter->next)
-    {
-      printf("\n%d.%s ", ++crtAdapter, adapter->name);
-      printf("-- %s\n", adapter->description);
-    }
-    printf("\n" );
-    printf("Enter the adapter number between 1 and %d:", crtAdapter );
-    int adapterNumber;
-    scanf("%d", &adapterNumber);
-    if ((adapterNumber < 1) || (adapterNumber > crtAdapter))
-    {
-      printf("\nAdapter number out of range.\n");
-      pcap_freealldevs(allAdapters);
-      bRet = false;
-    }
-    else
-    {
-      /* parse the list until we reach the desired adapter */
-      adapter = allAdapters;
-      for (crtAdapter = 0; crtAdapter < adapterNumber - 1; crtAdapter++)
-      {
-        adapter = adapter->next;
-      }
-
-      /* TODO: For now, find *any* AF_INET address. */
-      pcap_addr* adapterAddress = adapter->addresses;
-      while (NULL != adapterAddress)
-      {
-        if (AF_INET == adapterAddress->addr->sa_family)
+     // print the list of adapters along with basic information about an adapter
+      printf("Please choose the adapter through which you connect to your NAT box (Home router/WiFi router)\n");
+     int crtAdapter = 0;
+     for (adapter = allAdapters; adapter != NULL; adapter = adapter->next)
+     {
+        printf("\n%d.%s ", ++crtAdapter, adapter->name);
+        printf("-- %s\n", adapter->description);
+     }
+     printf("\n" );
+     printf("Enter the adapter number between 1 and %d:", crtAdapter );
+     int adapterNumber;
+     if (1 == scanf("%d", &adapterNumber))
+     {
+        if ((adapterNumber < 1) || (adapterNumber > crtAdapter))
         {
-          struct sockaddr_in *sin =  (struct sockaddr_in*)adapterAddress->addr;
-          INTERFACEIP = m_uInterfaceIP = ntohl(sin->sin_addr.s_addr);
-          ip = m_uInterfaceIP;
-          break;
+           printf("\nAdapter number out of range.\n");
+           pcap_freealldevs(allAdapters);
+           bRet = false;
         }
-        adapterAddress = adapterAddress->next;
-      }
+        else
+        {
+           /* parse the list until we reach the desired adapter */
+           adapter = allAdapters;
+           for (crtAdapter = 0; crtAdapter < adapterNumber - 1; crtAdapter++)
+           {
+              adapter = adapter->next;
+           }
 
-      /* Adapter name and MAC address */
-      strcpy(m_szAdapterName, adapter->name);
-      bRet = GetInterfaceMacAddress(m_szAdapterName, MACADDR);
-      if (!bRet)
-      {
-        eprintf("Could not retrieve MAC address!\n");
-      }
-    }
-    pcap_freealldevs(allAdapters);
+           /* TODO: For now, find *any* AF_INET address. */
+           pcap_addr* adapterAddress = adapter->addresses;
+           while (NULL != adapterAddress)
+           {
+              if (AF_INET == adapterAddress->addr->sa_family)
+              {
+                 struct sockaddr_in *sin =  (struct sockaddr_in*)adapterAddress->addr;
+                 INTERFACEIP = m_uInterfaceIP = ntohl(sin->sin_addr.s_addr);
+                 ip = m_uInterfaceIP;
+                 break;
+              }
+              adapterAddress = adapterAddress->next;
+           }
+
+           /* Adapter name and MAC address */
+           strcpy(m_szAdapterName, adapter->name);
+           bRet = GetInterfaceMacAddress(m_szAdapterName, MACADDR);
+           if (!bRet)
+           {
+              eprintf("Could not retrieve MAC address!\n");
+           }
+        }
+        pcap_freealldevs(allAdapters);
+     }
   }
   return bRet;
 }
 
 /* Takes the network of the TUN/TAP device, not the address of the TUN/TAP device */
-bool PcapArpHandler::Init(uint32_t &p_uTuntapNet, uint32_t &p_uTuntapMask,  uint32_t &p_uNatAddr)
+bool PcapArpHandler::Init(uint32_t &p_uTuntapNet, uint32_t &p_uTuntapMask)
 {
   bool bRet = false;
   m_uTuntapNet = p_uTuntapNet;
   m_uTuntapMask = p_uTuntapMask;
-  m_uNatAddr = m_uNatAddr;
   char errorBuffer[PCAP_ERRBUF_SIZE];
   if ((ADAPTERHANDLE = pcap_open_live(m_szAdapterName, ADAPTERBUFSIZE, 1, -1, errorBuffer)) == NULL)
   {
@@ -179,7 +186,7 @@ void PcapArpHandler::Start()
 
 void pcap_arp_callback(u_char *useless, const struct pcap_pkthdr* pkthdr, const u_char* inPacket)
 {
-  fprintf(stderr, "Read a packet of size %d\n", pkthdr->len);
+  dprintf("Read a packet of size %d\n", pkthdr->len);
 
   int outPacketSize = sizeof(struct ether_header) + sizeof(struct arphdr) + sizeof(struct arp);
   u_char* outPacket = new u_char[outPacketSize];

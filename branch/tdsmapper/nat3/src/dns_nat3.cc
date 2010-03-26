@@ -8,6 +8,7 @@
 #include "dns_nat3.h"
 #include "dns_rr.h"
 #include "types.h"
+#include "log.h"
 #include "functions.h"
 
 #define GOOD assert(m_rdlen == m_fixed_rdlen)

@@ -10,6 +10,7 @@
 #include "dns_rr.h"
 #include "dns_name.h"
 #include "types.h"
+#include "log.h"
 #include "functions.h"
 
 DnsA::DnsA()

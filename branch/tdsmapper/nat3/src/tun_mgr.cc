@@ -57,6 +57,7 @@
 #include "types.h"
 #include "functions.h"
 #include "OS_tun_mgr.h"
+#include "log.h"
 
 using namespace std;
 
@@ -435,12 +436,12 @@ bool TunnelMgr::replaceIp(tun_pkt_t &p_tPkt)
   else
   {
     // This new IP will be the "local" src IP of this tunnel.
-eprintf("replaceip original src is %s\n", inet_ntoa(pIpHdr->ip_src));
-eprintf("replaceip original dst is %s\n", inet_ntoa(pIpHdr->ip_dst));
+dprintf("replaceip original src is %s\n", inet_ntoa(pIpHdr->ip_src));
+dprintf("replaceip original dst is %s\n", inet_ntoa(pIpHdr->ip_dst));
     pIpHdr->ip_src.s_addr = htonl(uNewSrcIP);
     //pIpHdr->ip_dst.s_addr = htonl(m_uLocalNet + 1);
-eprintf("replace ip new src is %s\n", inet_ntoa(pIpHdr->ip_src));
-eprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
+dprintf("replace ip new src is %s\n", inet_ntoa(pIpHdr->ip_src));
+dprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
 	pIpHdr->ip_sum = 0;
     pIpHdr->ip_sum = checksum((uint16_t *) pIpHdr, (pIpHdr->ip_hl)*4);
     p_tPkt.m_uIP = ntohl(pIpHdr->ip_dst.s_addr);
@@ -464,7 +465,7 @@ bool TunnelMgr::fwdOut(tun_pkt_t &p_tPkt)
   // Make sure there's any data to even send.
   if (NULL == p_tPkt.m_pData)
   {
-    eprintf("Unable to send packet with NULL data.\n");
+    dprintf("Unable to send packet with NULL data.\n");
   }
   else 
   {
@@ -477,7 +478,7 @@ bool TunnelMgr::fwdOut(tun_pkt_t &p_tPkt)
       char szIP[16];
       memset(szIP, 0, 16);
       net_itoa(uIP, szIP);
-      eprintf("No mapping found for destination: %s\n", szIP);
+      dprintf("No mapping found for destination: %s\n", szIP);
       p_tPkt.m_uOffset = 0;
     }
     // If the offset is 0, then we are just getting started (i.e. we
@@ -505,7 +506,7 @@ bool TunnelMgr::fwdOut(tun_pkt_t &p_tPkt)
         net_itoa(uIP, szIP1);
         net_itoa(p_tPkt.m_uIP, szIP2);
         net_itoa((*tIter).m_uRemoteIP, szIP3);
-        eprintf("fwdOut() - Sending packet from local IP: %s to %s:%u -> %s\n",
+        dprintf("fwdOut() - Sending packet from local IP: %s to %s:%u -> %s\n",
           szIP1,
           szIP2,
           p_tPkt.m_uPort,
@@ -514,7 +515,7 @@ bool TunnelMgr::fwdOut(tun_pkt_t &p_tPkt)
       // Write away...
       if (!writePkt((HANDLE)m_sListenFd, p_tPkt)) // HANDLE for Windows. Will work on Linux
       {
-        eprintf("Unable to writePkt.  Dropping.\n");
+        dprintf("Unable to writePkt.  Dropping.\n");
         // This will cause us to destroy the packet below.
       }
       else
@@ -617,7 +618,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     if (WriteFile(p_iFd, p_tPkt.m_pData, (p_tPkt.m_uOffset), // TODO
       &dwBytesWritten, &stOverlap))
     {
-      eprintf("WriteFile completed with %d!!\n", dwBytesWritten);
+      dprintf("WriteFile completed with %d!!\n", dwBytesWritten);
     }
     // Real error, or just overlapped I/O?
     else
@@ -631,7 +632,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
         {
           bRet = false;
           dwBytesWritten = -1; // just to be safe :-/
-          eprintf("GetOverlappedResult failed with %d!\n", GetLastError());
+          dprintf("GetOverlappedResult failed with %d!\n", GetLastError());
         }
       }
       else
@@ -656,7 +657,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
     tAddr.sin_addr.s_addr = htonl(p_tPkt.m_uIP);
     // Send a tun packet to the other end
     iTemp = sendto((SOCKET)p_iFd, p_tPkt.m_pData, p_tPkt.m_uSize, 0, (struct sockaddr *) &tAddr, sizeof(tAddr));
-    eprintf("Write request to socket %x IP, %d bytes, %s data\n", p_tPkt.m_uIP, (int)p_tPkt.m_uSize, p_tPkt.m_pData);
+    dprintf("Write request to socket %x IP, %d bytes, %s data\n", p_tPkt.m_uIP, (int)p_tPkt.m_uSize, p_tPkt.m_pData);
     dprintf("writepkt to %d socket %d bytes %x ip, %d port\n", p_iFd, iTemp, tAddr.sin_addr.s_addr, tAddr.sin_port);
   }
 
@@ -664,7 +665,7 @@ bool TunnelMgr::writePkt(HANDLE p_iFd, tun_pkt_t &p_tPkt, bool p_bTun /*= false*
       && EINTR != errno
       && EAGAIN != errno)
   {
-    eprintf("Unable to send to socket %d: %s, errno:%d\n", p_iFd, strerror(errno), errno);
+    dprintf("Unable to send to socket %d: %s, errno:%d\n", p_iFd, strerror(errno), errno);
     bRet = false;
   }
   // Update the offset so we don't send this data more than once.
@@ -691,11 +692,11 @@ bool TunnelMgr::convertToFrame(tun_pkt_t &p_tPkt)
   dprintf("convertoframe being called\n");
   if (NULL == p_tPkt.m_pData)
   {
-    eprintf("Packet has NULLL data.\n");
+    dprintf("Packet has NULLL data.\n");
   }
   else if (!p_tPkt.m_bComplete)
   {
-    eprintf("Packet not complete yet.\n");
+    dprintf("Packet not complete yet.\n");
   }
   // <TODO> need to do frag logic.
   else if ((int) p_tPkt.m_uSize > m_iTunMTU)

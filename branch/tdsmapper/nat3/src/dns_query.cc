@@ -23,6 +23,7 @@ using namespace std;
 #include "tun_mgr.h"
 #include "tun_ent.h"
 #include "types.h"
+#include "log.h"
 #include "functions.h"
 
 struct sockaddr_in DnsQuery::m_resolver;

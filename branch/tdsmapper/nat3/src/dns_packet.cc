@@ -7,6 +7,7 @@ using namespace std;
 #include "dns_compression.h"
 #include "dns_header.h"
 #include "dns_rr.h"
+#include "log.h"
 
 // default param for size is 512
 DnsPacket::DnsPacket(int size)

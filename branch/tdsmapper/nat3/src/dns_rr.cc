@@ -12,6 +12,7 @@
 #include "dns_name.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 
 #define the_force namespace std

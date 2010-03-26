@@ -5,6 +5,7 @@
 #include "tun_ent.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 using namespace std;
 
@@ -62,7 +63,7 @@ void TunnelEntry::setIP(uint32_t uIP)
   }
   else
   {
-    fprintf(stderr, "%s [%d] - Invalid IP Address (%d).\n",
+    eprintf( "%s [%d] - Invalid IP Address (%d).\n",
             __FILE__,
             __LINE__,
             uIP);
@@ -88,7 +89,7 @@ tun_hdr_t TunnelEntry::getHdr(int iIndex)
   }
   else
   {
-    fprintf(stderr, "%s [%d] - Invalid index (%d)\n",
+    eprintf( "%s [%d] - Invalid index (%d)\n",
             __FILE__,
             __LINE__,
             iIndex);  

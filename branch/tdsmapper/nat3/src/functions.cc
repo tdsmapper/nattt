@@ -15,6 +15,7 @@
 
 #include "functions.h"
 #include "types.h"
+#include "log.h"
 
 #ifndef _MSC_VER
 

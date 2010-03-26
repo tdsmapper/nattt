@@ -21,9 +21,9 @@
 
 #include "tun_device.h"
 #include "tun_defs.h"
-// TODO(jkrikheli) move net_itoa() to a common file
-#include "tun_mgr.h" // net_itoa() 
+#include "tun_mgr.h"
 #include "types.h"
+#include "log.h"
 
 void PrintPacketInHex(unsigned char *packet, int len)
 {

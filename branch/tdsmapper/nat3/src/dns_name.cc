@@ -5,6 +5,7 @@
 #include "dns_header.h" // for header size
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 #ifndef _MSC_VER
    #include <limits.h>
 #endif

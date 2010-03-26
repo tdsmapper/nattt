@@ -23,6 +23,7 @@
 #include "lru_cache.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 
 using namespace std;
 
@@ -81,7 +82,7 @@ bool Resolver::listen()
       if (setsockopt(m_udp_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&ignore,
             sizeof(ignore)) < 0)
       {
-        fprintf(stderr, "setsockopt with SO_REUSEADDR failed with error %d\n", GetLastError());
+        eprintf( "setsockopt with SO_REUSEADDR failed with error %d\n", GetLastError());
         return false;
       }
     }

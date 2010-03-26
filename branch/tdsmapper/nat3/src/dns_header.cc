@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <stdio.h>
 #include <vector>
 #ifdef _MSC_VER
   #include <Winsock2.h>
@@ -10,6 +11,7 @@
 #include "dns_header.h"
 #include "types.h"
 #include "functions.h"
+#include "log.h"
 #include <string.h>
 
 #include <stdlib.h>

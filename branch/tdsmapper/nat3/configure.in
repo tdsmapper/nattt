@@ -13,9 +13,7 @@ AC_PROG_INSTALL
 
 # Checks for libraries.
 dnl AC_CHECK_LIB(rdnsD_lib, some_function_in_your_lib)
-AC_CHECK_LIB(, pcap, ,[echo "Could not find pcap from the TCPDUMP package. Please check at http://www.tcpdump.org/"
-		      echo "Please install pcap from the tcpdump site only!"
-		exit 1]))
+AC_CHECK_LIB(pcap, pcap_sendpacket,  ,echo "Could not find pcap from the TCPDUMP package. Please check at http://www.tcpdump.org/"; exit 1)
 
 
 # Checks for header files.
