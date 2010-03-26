@@ -1,8 +1,17 @@
-#include <Winsock2.h>
-#include <Windows.h>
+#ifdef _MSC_VER
+   #include <Winsock2.h>
+   #include <Windows.h>
+   #include <iphlpapi.h>
+#else
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <unistd.h>
+#endif
+
+#include <stdio.h>
 #include <errno.h>
-#include <iphlpapi.h>
-#include <pcap.h>
+#include <string.h>
 
 #include "functions.h"
 #include "types.h"
@@ -14,7 +23,7 @@ int GetLastError()
   return errno;
 }
 
-static bool GetInterfaceMacAddress(char *pIface, unsigned char cMacAddr[])
+bool GetInterfaceMacAddress(char *pIface, unsigned char cMacAddr[])
 {
    bool bRet = false;
    int sockfd;

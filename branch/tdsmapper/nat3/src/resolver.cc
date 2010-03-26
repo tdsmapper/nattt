@@ -238,7 +238,7 @@ void Resolver::read_packet(struct sockaddr_in &from, DnsPacket &p)
     else
     {
       q->add_response(p);
-
+      sleep(1);
       // forward packet
       write_packet(q->dest(), q->packet_to_forward());
 

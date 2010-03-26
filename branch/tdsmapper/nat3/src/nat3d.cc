@@ -295,17 +295,20 @@ bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr,
   return bRet;
 }
 
+#ifdef _MSC_VER
 DWORD WINAPI win_pcap_arp_handler_wrapper(LPVOID lParam)
 {
   PARP.Start();
   return 0;
 }
+#else
 
 void* linux_pcap_arp_handler_wrapper(void* lParam)
 {
   PARP.Start();
   return 0;
 }
+#endif
 
 void spawnPcapArpHandler()
 {

@@ -397,12 +397,12 @@ bool TestTunnelMgr::testReadPkt()
       tun_pkt_t tPkt;
       memset(&tPkt, 0, sizeof(tPkt));
       fprintf(stdout, "\tGoing to receive initial packet.\n");
-      bRet = readPkt(iRecvFD, tPkt);
+      bRet = readSocketPkt(iRecvFD, tPkt);
 
       while (bRet && !tPkt.m_bComplete)
       {
         fprintf(stdout, "\tGoing to receive %u bytes.\n", (unsigned) (tPkt.m_uSize - tPkt.m_uOffset));
-        bRet = readPkt(iRecvFD, tPkt);
+        bRet = readSocketPkt(iRecvFD, tPkt);
       }
 
       if (0 != memcmp(tPkt.m_pData, &(pBuff[uHeaderLen]), uLen - uHeaderLen))

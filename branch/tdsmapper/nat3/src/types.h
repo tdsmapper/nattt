@@ -53,6 +53,17 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
 #define ETHERNET_READ_SIZE (m_iTunMTU + ETHERNET_HEADER_SIZE + ETHERNET_CRC_SIZE)
 #define LISTEN_READ_SIZE   (IP_MAXPACKET)
 
+#define TYPE_ETHERNET 0x0001
+/* This is struct ARP, not the header */
+  struct arp
+  {
+    unsigned char SHA[MACADDRSIZE];
+    uint32_t SPA;
+    unsigned char THA[MACADDRSIZE];
+    uint32_t TPA;
+  };
+
+
 /*
  *  OS Dependent types
  */
@@ -119,15 +130,6 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
     unsigned char ar_hln;           /* Length of hardware address.  */
     unsigned char ar_pln;           /* Length of protocol address.  */
     unsigned short int ar_op;       /* ARP opcode (command).  */
-  };
-#define TYPE_ETHERNET 0x0001
-
-  struct arp
-  {
-    unsigned char SHA[MACADDRSIZE];
-    uint32_t SPA;
-    unsigned char THA[MACADDRSIZE];
-    uint32_t TPA;
   };
 
   /* ICMP Headers */

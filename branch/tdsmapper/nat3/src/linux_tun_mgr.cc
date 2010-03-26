@@ -357,10 +357,10 @@ bool TunnelMgr::listen()
           if(m_tOutReadPkt.m_bComplete)
           {
             // Just enqueue. It already is an IP packet
-            if(!m_oOutboundQueue.enqueue(p_tPkt))
+            if(!m_oOutboundQueue.enqueue(m_tOutReadPkt))
             {
               eprintf("Unable to enqueue TUN packet!\n");
-              delete[] p_tPkt.m_pData;
+              delete[] m_tOutReadPkt.m_pData;
             }
           }
 #endif
