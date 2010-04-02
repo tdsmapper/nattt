@@ -1,0 +1,6 @@
+#summary Random notes about to life, the universe and everything. Oh..  NAT3D too
+
+== DNS Dynamic update command s==
+{{{
+nsupdate
+}}}
