@@ -192,15 +192,15 @@ void pcap_arp_callback(u_char *useless, const struct pcap_pkthdr* pkthdr, const 
   u_char* outPacket = new u_char[outPacketSize];
   struct ether_header* outEthHeader = (struct ether_header*) outPacket;
   struct arphdr *outArpHeader       = (struct arphdr*) &outPacket[sizeof(struct ether_header)];
-  struct arp *outArp                = (struct arp*) &outPacket[sizeof(struct ether_header) + sizeof(arphdr)];
+  struct arp *outArp                = (struct arp*) &outPacket[sizeof(struct ether_header) + sizeof(struct arphdr)];
 
   struct ether_header* inEthHeader = (struct ether_header*)inPacket;
-  struct arp *inArp                = (struct arp*) &inPacket[sizeof(struct ether_header) + sizeof(arphdr)];
+  struct arp *inArp                = (struct arp*) &inPacket[sizeof(struct ether_header) + sizeof(struct arphdr)];
 
   /* Set up the Ethernet header */
   memcpy(outEthHeader->ether_dhost, inEthHeader->ether_shost, MACADDRSIZE);
   memcpy(outEthHeader->ether_shost, MACADDR, MACADDRSIZE);
-  outEthHeader->ether_type =htons(ETHERTYPE_ARP);
+  outEthHeader->ether_type = htons(ETHERTYPE_ARP);
 
   /* Set up the ARP header */
   outArpHeader->ar_hln = MACADDRSIZE;

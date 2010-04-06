@@ -512,7 +512,7 @@ configure:4214: $? = 0
 configure:4214: result: yes
 configure:4220: checking for _doprnt
 configure:4220: gcc -o conftest -g -O2   conftest.c -lpcap  >&5
-/tmp/ccI0GZSd.o: In function `main':
+/tmp/ccYT7yv5.o: In function `main':
 /home/tdsmapper/IndepStudy/nat3/conftest.c:64: undefined reference to `_doprnt'
 collect2: ld returned 1 exit status
 configure:4220: $? = 1

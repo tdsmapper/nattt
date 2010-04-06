@@ -46,6 +46,7 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
 #define LISTEN_READ_SIZE   (IP_MAXPACKET)
 
 #define TYPE_ETHERNET 0x0001
+#pragma pack(1)
 /* This is struct ARP, not the header */
   struct arp
   {
