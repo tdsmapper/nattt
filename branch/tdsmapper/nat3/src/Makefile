@@ -11,7 +11,6 @@ TEST_DRIVERS = test_tun_mgr
 PROG = nat3d nat3ping
 
 CFLAGS += -Wall -Werror -D_REENTRANT
-CFLAGS += -DDEBUG -g
 
 CXXFLAGS += $(CFLAGS)
 

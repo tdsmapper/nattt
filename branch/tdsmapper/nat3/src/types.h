@@ -4,6 +4,7 @@
 
 #define MACADDRSIZE 6
 #define IPADDRSIZE 4
+#define INVALID -1
 
 #ifdef _MSC_VER
   #include <Winsock2.h>
@@ -46,7 +47,9 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
 #define LISTEN_READ_SIZE   (IP_MAXPACKET)
 
 #define TYPE_ETHERNET 0x0001
+#ifdef _MSC_VER
 #pragma pack(1)
+#endif
 /* This is struct ARP, not the header */
   struct arp
   {
@@ -54,8 +57,11 @@ typedef unsigned short int u_short;  // TODO: Check this type works well
     uint32_t SPA;
     unsigned char THA[MACADDRSIZE];
     uint32_t TPA;
-  };
-
+  }
+#ifndef _MSC_VER
+__attribute__((__packed__))
+#endif
+   ;
 
 /*
  *  OS Dependent types

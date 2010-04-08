@@ -7,7 +7,6 @@ LDFLAGS =  -lpcap
 DEFINES = -DHAVE_CONFIG_H
 
 CFLAGS += -Wall -Werror -D_REENTRANT
-CFLAGS += -DDEBUG -g
 
 CXXFLAGS += $(CFLAGS)
 

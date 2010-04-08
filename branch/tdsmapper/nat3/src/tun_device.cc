@@ -1,3 +1,9 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+
 #ifdef _MSC_VER
   #include <Winsock2.h>
 #else
@@ -9,11 +15,6 @@
   #include <strings.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
 
 #include "tun_defs.h"
 #include "tun_device.h"

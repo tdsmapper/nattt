@@ -211,7 +211,7 @@ bool get_tap_options(ConfigFile &f, uint32_t &tapAddr, uint32_t &tapMask)
   return bRet;
 }
 
-bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr, uint32_t &tapMask, char logFile[])
+bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr, uint32_t &tapMask, char logFile[], uint32_t &ip)
 {
   bool bRet = false;
   /* Get the config file */
@@ -227,20 +227,20 @@ bool get_options(ConfigFile &f, bool &server, uint16_t &port, uint32_t &tapAddr,
   }
 
   /* IP address is automatic. No more config file! */
-#if 0
   const string *ip_str = f.get("ip");
   if (ip_str == NULL) {
-    eprintf( "No IP address found in configuration file\n");
-    return false;
+     ip = -1;
+  }
+  else
+  {
+     struct in_addr ip_addr;
+     if (!inet_pton(AF_INET, ip_str->c_str(), &ip_addr)) {
+        eprintf( "Unable to parse %s as IP address\n", ip_str->c_str());
+        return false;
+     }
+     ip = ntohl(ip_addr.s_addr);
   }
 
-  struct in_addr ip;
-  if (!inet_pton(AF_INET, ip_str->c_str(), &ip)) {
-    eprintf( "Unable to parse %s as IP address\n", ip_str->c_str());
-    return false;
-  }
-  ip_addr = ntohl(ip.s_addr);
-#endif
   const string* server_str = f.get("server");
   if (server_str == NULL)
   {
@@ -328,23 +328,15 @@ void spawnPcapArpHandler()
 #endif
 }
 
-#ifdef DEBUG
-uint32_t TAPNET = 0x0001000A;
-uint32_t TAPMASK = 0x80ffffff;
-uint32_t NATADDR = 0x0101000A;
-#endif
-
-
 int main(int argc, char *argv[])
 {
-
   /* Config file */
-  ConfigFile f;
   string config_file = "/etc/nat3.conf";
   if (argc > 1)
   {
     config_file = argv[1];
   }
+  ConfigFile f;
   if (!f.load(config_file))
   {
     Eprintf( "Error loading configuration file: %s\n", f.error());
@@ -355,67 +347,78 @@ int main(int argc, char *argv[])
   uint32_t tapNetmask, tapAddr;
   bool server;
   char logFile[256];
-  if (!get_options(f, server, port, tapAddr, tapNetmask, logFile))
+  if (!get_options(f, server, port, tapAddr, tapNetmask, logFile, ip))
   {
-    return 1;
+     Eprintf("Problem with the config file\n");
+     return 1;
   }
-
-  open_log_file(logFile);
-
-  /* Windows WSAStartup - before resolver or tun_mgr */
-#ifdef _MSC_VER
-  if (!getWindowsVersion())
-  {
-    eprintf("Couldnt get Windows version\n");
-    return 3;
-  }
-  else if (!WSACleanup())
-  {
-    eprintf("Cleanup failed! %d\n", GetLastError());
-  }
-
-  WSADATA wsaData;
-  if (WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR)
-  {
-    eprintf("win_tun_mgr: WSAStartup failed %d!\n", GetLastError());
-  }
-#endif /* _MSC_VER */
-    
-   printf("Welcome to NAT3D.\n");
-  PARP.QueryAdapterDetails(ip);
-  /* Server only: PCAP arp handler */
-  if (server)
-  {
-    PARP.Init(tapAddr, tapNetmask);
-    spawnPcapArpHandler();
-  }
-  /* Client only: Resolver */
   else
   {
-    if (_spawnResolver(f) == NULL)
-    {
-      return 1;
-    }
-  }
+     open_log_file(logFile);
 
-  /* Tunnel manager */
-  TunnelMgr &mgr = TunnelMgr::getInstance();
-  mgr.init(ip,
-    port,
-    tapAddr,
-    tapNetmask,
-    TUN_MGR_MAX_LRU,
-    TUN_MGR_MAX_LRU,
-    TUN_MGR_MAX_PKT_QUEUE,
-    TUN_MGR_MAX_PKT_QUEUE);
-  mgr.listen();
-
+     /* Windows WSAStartup - before resolver or tun_mgr */
 #ifdef _MSC_VER
-  if (WSACleanup())
-  {
-    eprintf("WSACleanup failed with %d\n", GetLastError());
-  }
+     WSADATA wsaData;
+     if (!getWindowsVersion())
+     {
+        eprintf("Couldnt get Windows version\n");
+        return 3;
+     }
+     WSACleanup(); // Ignore return value
+
+     if (WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR)
+     {
+        eprintf("win_tun_mgr: WSAStartup failed %d!\n", GetLastError());
+        return 4;
+     }
 #endif /* _MSC_VER */
 
-  return 0;
+     /* If there was no ip address option in the config file, get it now! */
+     if (ip == (uint32_t)INVALID)
+     {
+        printf("Welcome to NAT3D.\n");
+        PARP.QueryAdapterDetails(ip);
+     }
+     /* Server only: PCAP arp handler */
+     if (server)
+     {
+        if (PARP.Init(tapAddr, tapNetmask, ip))
+        {
+           spawnPcapArpHandler();
+        }
+        else
+        {
+           eprintf("Unable to Init ARP handling system!\n");
+           return -1;
+        }
+     }
+     /* Client only: Resolver */
+     else
+     {
+        if (_spawnResolver(f) == NULL)
+        {
+           return 1;
+        }
+     }
+
+     /* Tunnel manager */
+     TunnelMgr &mgr = TunnelMgr::getInstance();
+     mgr.init(ip,
+           port,
+           tapAddr,
+           tapNetmask,
+           TUN_MGR_MAX_LRU,
+           TUN_MGR_MAX_LRU,
+           TUN_MGR_MAX_PKT_QUEUE,
+           TUN_MGR_MAX_PKT_QUEUE);
+     mgr.listen();
+
+#ifdef _MSC_VER
+     if (WSACleanup())
+     {
+        eprintf("WSACleanup failed with %d\n", GetLastError());
+     }
+#endif /* _MSC_VER */
+  }
+  return -1;
 }

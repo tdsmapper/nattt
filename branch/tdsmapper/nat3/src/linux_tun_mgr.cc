@@ -6,6 +6,7 @@
 #define __USE_BSD
 #endif
 
+#include <iostream> // Compatibility with OpenWRT
 #include <errno.h>
 #include <fcntl.h>
 
@@ -22,6 +23,7 @@
 #define __FAVOR_BSD
 #endif
 
+#include <string.h>
 #ifndef _MSC_VER
 #include <netinet/tcp.h>
 #include <net/ethernet.h>
@@ -49,7 +51,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 
 #include "tun_mgr.h"

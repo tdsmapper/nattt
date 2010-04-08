@@ -16,8 +16,10 @@ private:
 
   bool setPcapFilter();
 public:
-  bool Init(uint32_t &p_uTuntapAddress, uint32_t &p_uTuntapMask);
+  PcapArpHandler();
+  bool Init(uint32_t &p_uTuntapAddress, uint32_t &p_uTuntapMask, uint32_t p_uIP = INVALID);
   bool QueryAdapterDetails(uint32_t &ip);
+  bool GetAdapterName(uint32_t &ip);
   void Start();
 };
 

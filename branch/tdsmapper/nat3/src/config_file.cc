@@ -28,7 +28,8 @@ bool ConfigFile::load(const string &file) {
     }
 
     try {
-        while (getline(fin, m_line))
+       // Important: For compatibility with OpenWRT SDK, getline() was replace with getline().eof()
+        while (getline(fin, m_line)) 
             parse_option();
     }
     catch (const char *s) {
