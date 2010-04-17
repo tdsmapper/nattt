@@ -11,7 +11,11 @@ Sample code of how to update a DNS record
 nsupdate
 > server xyz.com
 > zone nattt
-> update add 5.nattt. 1 TYPE65324 \# 10 46 b0 34 63 26 94 0a 00 00 05     
+> update add 5.nattt. 1 TYPE65324 \# 10 xx xx xx xx 26 94 0a 00 00 05     
 > show
 > send
 }}}
+
+Where xx represent the external IP address.
+
+It is further described [http://code.google.com/p/nat3d-dns/wiki/CustomRecord here].
