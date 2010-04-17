@@ -22,7 +22,7 @@ Where _name_ refers to the FQDN (ending with a period) name for the server, _ext
 
 This record is copy into the zone database of BIND9 (eg. myzone.db)
 
-Alternatively, you can use BIND's[BINDDynDNS dynamic dns] to do achieve the same.
+Alternatively, you can use BIND's [BINDDynDNS dynamic dns] to do achieve the same. You could also run your own [http://code.google.com/p/nat3d-dns/ DynDNS service for NAT3D].
 
 == Setting up the DNS Zone ==
 You need to set up a zone that is authoritative for names that return a NAT3 record type. Good information is found [http://www.debuntu.org/book/export/html/85 here].
