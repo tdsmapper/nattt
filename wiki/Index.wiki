@@ -8,6 +8,7 @@
   * [RunningNATTT Running NAT3D]
   * [ResolverSetup Resolver Setup]
   * [Errors Errors] faced with NAT3D.
+  * [http://code.google.com/p/nat3d-dns/ Run your own DynDNS service for NAT3D]
 
 == Development pages ==
   * [DeveloperPages Devel pages]
