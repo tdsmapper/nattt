@@ -425,28 +425,82 @@ bool TunnelMgr::replaceIp(tun_pkt_t &p_tPkt)
   // Otherwise, there is a tunnel.
   else
   {
-    // Get its IP.
-    uNewSrcIP = pEnt->getIP();
+     // Get its IP.
+     uNewSrcIP = pEnt->getIP();
   }
 
   // If we couldn't find an IP, we're stuck.
   if (0 == uNewSrcIP)
   {
-    eprintf("Unable to create key.\n");
+     eprintf("Unable to create key.\n");
   }
   else
   {
-    // This new IP will be the "local" src IP of this tunnel.
-dprintf("replaceip original src is %s\n", inet_ntoa(pIpHdr->ip_src));
-dprintf("replaceip original dst is %s\n", inet_ntoa(pIpHdr->ip_dst));
-    pIpHdr->ip_src.s_addr = htonl(uNewSrcIP);
-    //pIpHdr->ip_dst.s_addr = htonl(m_uLocalNet + 1);
-dprintf("replace ip new src is %s\n", inet_ntoa(pIpHdr->ip_src));
-dprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
-	pIpHdr->ip_sum = 0;
-    pIpHdr->ip_sum = checksum((uint16_t *) pIpHdr, (pIpHdr->ip_hl)*4);
-    p_tPkt.m_uIP = ntohl(pIpHdr->ip_dst.s_addr);
+     // This new IP will be the "local" src IP of this tunnel.
+     dprintf("replaceip original src is %s\n", inet_ntoa(pIpHdr->ip_src));
+     dprintf("replaceip original dst is %s\n", inet_ntoa(pIpHdr->ip_dst));
+     pIpHdr->ip_src.s_addr = htonl(uNewSrcIP);
 
+     //pIpHdr->ip_dst.s_addr = htonl(m_uLocalNet + 1); // Retained from Eric's old code for reasons
+     dprintf("replace ip new src is %s\n", inet_ntoa(pIpHdr->ip_src));
+     dprintf("replace ip new dest is %s\n", inet_ntoa(pIpHdr->ip_dst));
+     pIpHdr->ip_sum = 0;
+     pIpHdr->ip_sum = checksum((uint16_t *) pIpHdr, (pIpHdr->ip_hl)*4);
+     p_tPkt.m_uIP = ntohl(pIpHdr->ip_dst.s_addr);
+
+     /* Update the TCP and UDP checksums!  - Written in a hurry. TODO/XXX */
+     if (pIpHdr->ip_p == IPPROTO_TCP)
+     {
+        unsigned char checksumbuf[IP_MAXPACKET];
+        memset(checksumbuf, 0, sizeof(checksumbuf));
+
+        int hlen = pIpHdr->ip_hl*4;
+        int totalLen = ntohs(pIpHdr->ip_len);
+        int tcpLen = totalLen - hlen;
+
+        memcpy(checksumbuf,     &pIpHdr->ip_src.s_addr, sizeof(pIpHdr->ip_src.s_addr));
+        memcpy(checksumbuf + 4, &pIpHdr->ip_dst.s_addr, sizeof(pIpHdr->ip_dst.s_addr));
+        uint8_t *prot = (uint8_t*)&checksumbuf[9];
+        *prot = IPPROTO_TCP;
+        uint16_t *totalLenLoc = (uint16_t*)&checksumbuf[10];
+        *totalLenLoc = htons(tcpLen);
+
+        memcpy((checksumbuf + 12), &p_tPkt.m_pData[hlen], tcpLen); // copy over TCP header
+        checksumbuf[12 + 16] = 0; // 12 = size of the pseudo IP header
+        checksumbuf[12 + 17] = 0;
+          
+        int bufLen = (tcpLen % 2) ? tcpLen+1: tcpLen;   // Pick an even buf len
+        bufLen += 12; // ip packet size
+        uint16_t uSum = checksum((uint16_t*)checksumbuf, bufLen);
+        uint16_t *sumLoc = (uint16_t*)&p_tPkt.m_pData[hlen + 16];
+        *sumLoc = uSum;
+     }
+     else if (pIpHdr->ip_p == IPPROTO_UDP)
+     {
+        unsigned char checksumbuf[IP_MAXPACKET];
+        memset(checksumbuf, 0, sizeof(checksumbuf));
+
+        int hlen = pIpHdr->ip_hl*4;
+        int totalLen = ntohs(pIpHdr->ip_len);
+        int udpLen = totalLen - hlen;
+
+        memcpy(checksumbuf,     &pIpHdr->ip_src.s_addr, sizeof(pIpHdr->ip_src.s_addr));
+        memcpy(checksumbuf + 4, &pIpHdr->ip_dst.s_addr, sizeof(pIpHdr->ip_dst.s_addr));
+        uint8_t *prot = (uint8_t*)&checksumbuf[9];
+        *prot = IPPROTO_UDP;
+        uint16_t *totalLenLoc = (uint16_t*)&checksumbuf[10];
+        *totalLenLoc = htons(udpLen);
+
+        memcpy((checksumbuf + 12), &p_tPkt.m_pData[hlen], udpLen); // copy over UDP header + data
+        checksumbuf[12 + 7] = 0; // 12 = size of the pseudo IP header
+        checksumbuf[12 + 6] = 0;
+
+        int bufLen = (udpLen % 2) ? udpLen+1: udpLen;   // Pick an even buf len
+        bufLen += 12; // ip packet size
+        uint16_t uSum = checksum((uint16_t*)checksumbuf, bufLen);
+        uint16_t *sumLoc = (uint16_t*)&p_tPkt.m_pData[hlen + 6];
+        *sumLoc = uSum;
+     }
     return true;
   }
 
