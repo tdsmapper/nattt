@@ -7,7 +7,7 @@ NAT3D was tested on OpenWRT with a WRT54GLv1.1 and found to work.
 Some firewall rules needed to be changed as below
 
 {{{
-### Allow OpenVPN traffic on tun* devices
+### Allow NAT3D traffic on tun* devices
 iptables -A forwarding_rule -i tun+ -o br0 -j ACCEPT
 iptables -A forwarding_rule -i br0 -o tun+ -j ACCEPT
 iptables -A input_rule -i tun+ -j ACCEPT
