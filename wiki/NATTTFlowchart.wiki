@@ -1,6 +1,6 @@
 #summary NATTT Flowchart
 
-<font color="red"> Bridging abandoned. NAT3D uses routing instead. Refer the design document in the svn repository, under nat3d/docs </font>.
+<font color="red"> =Page deprecated= Bridging abandoned. NAT3D uses routing instead. Refer the design document in the svn repository, under nat3d/docs </font>.
 
 This shows NAT3D working as a client in bridging mode.
 
