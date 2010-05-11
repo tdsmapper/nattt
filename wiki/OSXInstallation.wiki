@@ -6,6 +6,7 @@
   * Installation of NAT3D on Mac OS X requires the [http://tuntaposx.sourceforge.net/download.xhtml TUN/TAP driver].
   * Installation of the TUN/TAP driver is similar to installing any other program on the Mac OS X
   * An error such as _unable to open /dev/tun0_ suggests the driver was not installed correctly.
+ * PCAP library is required. You need the pcap lib. from tcpdump. not the other one. Find the portfile [http://libpcap.darwinports.com/ here]
 
 
 = Details =
