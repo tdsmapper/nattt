@@ -7,11 +7,40 @@ The NAT3D configuration file is required by NAT3D to know the following details:
   * DNS Resolver address
   * IP address of the interface on which to listen
   * Port number on which to listen
+  * Subnet and mask for the TUN device
+  * Is this instance a server or client?
 
 The options are entered in the configuration file in the format below:
 
 _option_ = _value_
 
+== Sample config. file == 
+
+{{{
+server = false
+log = none
+port = 9876
+resolver = a.b.c.d
+tapnetaddr = 10.0.1.0
+tapnetmask = 255.255.255.0
+natbox = 10.0.1.0
+}}}
+
+In the NATTT client (_server = false_), note that the 10.0.1.0 subnet is assumed to be outside the local subnet. i.e. if your NAT subnet is 10.0.1.0, you need to use another free subnet here.
+Note that if you do not provide an _ip_ option (shown below), you will be asked for which network interface you to use (See description of the option _ip_ below on guideline to choosing the right interface)
+
+{{{
+ip = 10.0.0.135
+log = stderr
+server = true 
+port = 9876
+resolver = a.b.c.d
+tapnetaddr = 10.0.0.248
+tapnetmask = 255.255.255.248
+}}}
+
+This config is for NAT3D  running on a host behind the NAT i.e. a PC/Mac. Therefore, the subnet assigned to the TUN device is an unused sub-subnet of the local subnet. i.e. in the config file above, the NAT subnet is something like 10.0.0.0/24.
+However, if NAT3D were running on a NAT, it should use any subnet outside of the local subnet (The NAT is the default route for all addresses on that subnet).
 
 = Explanation of options =
 
@@ -22,6 +51,14 @@ To set up a resolver, see [ResolverSetup instructions].
 
 Example: resolver = 127.0.0.1
 
+== IP address of the interface used for tunneling (option: _ip_) ==
+
+For the server, this is typically the interface connecting to the NAT i.e. Wifi or Ethernet. 
+For the client, this is the interface that connects to the Internet. It can be the same as the interface connecting to the NAT depending on your configuration.
+
+Example: ip = a.b.c.d
+
+If you do not provide this option, you will be asked which interface to use. If you provide this option, NAT3D will use the interface with that IP address.
 
 == Port number on which to listen (option: _port_) ==
 
@@ -35,28 +72,19 @@ If you plan to use NAT3D as a client, or as a server with the intention of makin
 
 *TAP address and netmask (Options: _tapnetaddr_, _tapnetmask_*
 
-The options _tapnetaddr_ and _tapnetmask_ describe the IP address of the TAP adapter/device and the address range the TAP device listens on.
+The options _tapnetaddr_ and _tapnetmask_ describe the IP address of the TUN adapter/device and the address range the TAP device listens on.
 
-If no option is specified, a default of 10.254.0.0/16 is used.
+== Logging (option: _log_) ==
+This is the log file to which the NAT3D events are sent. NAT3D appends the log to this file. Assigning _log = stderr_ sends all event output to stderr. Assigning _log = none_ sends all output to /dev/null or the NULL device on Windows i.e. the user does see any output on the screen. 
+
+
+
+= Deprecated =
 
 == Bridging (Optional, Option: _bridge_)==
 
 Setting _bridge_ to "on" means that no address is assigned to the TAP interface/adapter. Setting it to off means the TAP device/adapter is assigned the IP address specified.
 
-== Sample Config file ==
-The TUN/TAP device is set to a subnet (10.0.1.0/25) of the network the Wifi device runs on - 10.0.1.0/24
-
-{{{
-server = false
-port = 9876
-resolver = 127.0.0.1
-tapnetaddr = 10.0.1.0
-tapnetmask = 255.255.255.128
-natbox = 10.0.1.128
-}}}
-
-
-= Deprecated =
 == Sample config file ==
 
 *Server:* (behind a NAT box)
