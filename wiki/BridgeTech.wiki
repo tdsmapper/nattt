@@ -1,5 +1,8 @@
 #summary Some basic tech details about how NAT3D uses the software bridge
 
+= <font color="red"> Deprecated. </font> =
+NAT3D can be built for bridging mode by using the NAT3_TAP option. Please be aware that bridging does not work well with wireless interfaces. Since bridging was abandoned in Feb-March 2010, code written since then may break bridging code which was functional before Feb-March.
+
 = Introduction =
 
 A software network bridge is a layer 2 link between two network adapters. Therefore, all traffic on either interface is seen by both interfaces.
