@@ -1,9 +1,11 @@
 #summary Installation of NAT3D on UNIX/Mac OS X
 #labels Phase-Deploy
 
+All libraries/drivers below are found in the SVN repository under _/branch/tdsmapper/nat3_libs_. Use this in case the drivers/libs are no longer available.
+
 = Additional Software/Drivers =
 
-  * Installation of NAT3D on Mac OS X requires the [http://tuntaposx.sourceforge.net/download.xhtml TUN/TAP driver]. You may also find it in the SVN repository.
+  * Installation of NAT3D on Mac OS X requires the [http://tuntaposx.sourceforge.net/download.xhtml TUN/TAP driver]. 
   * Installation of the TUN/TAP driver is similar to installing any other program on the Mac OS X
   * An error such as _unable to open /dev/tun0_ suggests the driver was not installed correctly.
  * PCAP library is required. You need the pcap lib. from tcpdump. not the other one. Find the portfile [http://libpcap.darwinports.com/ here]. You may also find it in the SVN repository.
