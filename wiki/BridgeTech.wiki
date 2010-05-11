@@ -1,4 +1,5 @@
 #summary Some basic tech details about how NAT3D uses the software bridge
+#labels Deprecated
 
 = <font color="red"> Deprecated. </font> =
 <font color="red"> Document no longer in use. Provided so that future attempts to revive bridging. </font>
