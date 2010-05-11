@@ -2,7 +2,8 @@
 #labels Phase-Deploy
 
 = Additional software/drivers =
-  * None. The TUN/TAP driver should be installed on most modern Linux operating systems. In case it is not present, please find it [http://vtun.sourceforge.net/tun/index.html here].
+  * The TUN/TAP driver should be installed on most modern Linux operating systems. In case it is not present, please find it [http://vtun.sourceforge.net/tun/index.html here].
+  * Please install the libpcap library. You need the one from tcpdump, not the other libpcap. You may find it in the SVN repository.
 
 = Details =
 
