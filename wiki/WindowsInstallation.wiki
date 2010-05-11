@@ -24,3 +24,6 @@ Therefore, you might have to add the TUN/TAP device's network as a safe/accepted
 
 = Official site =
 If none of the above are helpful, please visit the [http://openvpn.net/INSTALL-win32.html official site].
+
+= Install WinPCAP =
+Install the pcap library from [http://www.winpcap.org/ here].
