@@ -1,6 +1,7 @@
 #summary Setting up a bridge in Windows/Linux
 
 = <font color="red"> Deprecated. </font> =
+<font color="red"> Document no longer in use. Provided so that future attempts to revive bridging. </font>
 NAT3D can be built for bridging mode by using the NAT3_TAP option. Please be aware that bridging does not work well with wireless interfaces. Since bridging was abandoned in Feb-March 2010, code written since then may break bridging code which was functional before Feb-March.
 
 = Introduction =
