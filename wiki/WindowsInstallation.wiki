@@ -10,7 +10,7 @@ Installation on Windows requires 2 major steps:
 
 = Installation of the TUN/TAP driver from OpenVPN =
 
-As of now, the easiest way to get this done is by downloading the [http://openvpn.net/index.php/open-source/downloads.html OpenVPN] Windows Installer (1 MB in size).
+As of now, the easiest way to get this done is by downloading the [http://openvpn.net/index.php/open-source/downloads.html OpenVPN] Windows Installer (1 MB in size). You may also find it in the SVN repository.
 
 Once you have downloaded the OpenVPN Windows installer, open it, and install only the TAP-WIN32 driver from the "Choose Components" screen.
 
@@ -26,4 +26,4 @@ Therefore, you might have to add the TUN/TAP device's network as a safe/accepted
 If none of the above are helpful, please visit the [http://openvpn.net/INSTALL-win32.html official site].
 
 = Install WinPCAP =
-Install the pcap library from [http://www.winpcap.org/ here].
+Install the pcap library from [http://www.winpcap.org/ here]. You may also find it in the SVN repository.
