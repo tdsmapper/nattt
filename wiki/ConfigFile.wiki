@@ -79,7 +79,7 @@ This is the log file to which the NAT3D events are sent. NAT3D appends the log t
 
 
 
-= Deprecated =
+= <font color="red"> Deprecated </font>=
 
 == Bridging (Optional, Option: _bridge_)==
 
