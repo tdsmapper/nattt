@@ -21,6 +21,8 @@ Please choose your operating system for detailed instructions on how to install 
 
 You need to set up your machine as the local resolver. The NAT3D listens on the DNS port and handles all DNS queries.
 
+NAT3D will take over handling DNS queries i.e. all DNS queries from applications on your machine are sent to NAT3D, which sends them to the actual DNS server.
+
 === Linux/UNIX/Mac:===
 
 There is a script _resolv-roll.pl_ that will update config file of NAT3D to reflect the new resolver, and also update /etc/resolv.conf
