@@ -9,7 +9,7 @@
   * [ResolverSetup Resolver Setup]
   * [Errors Errors] faced with NAT3D.
   * [http://code.google.com/p/nat3d-dns/ Run your own DynDNS service for NAT3D]
-
+  * [OpenWRTInstallation Porting NAT3D onto a NAT/router]
 == Development pages ==
   * [DeveloperPages Devel pages]
   * [NATTTFlowchart Flowchart of application]
