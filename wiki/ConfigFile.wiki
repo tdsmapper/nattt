@@ -57,8 +57,14 @@ For the server, this is typically the interface connecting to the NAT i.e. Wifi 
 For the client, this is the interface that connects to the Internet. It can be the same as the interface connecting to the NAT depending on your configuration.
 
 Example: ip = a.b.c.d
+_*Please do not enter 127.0.0.1 for the address of the interface.*_
 
 If you do not provide this option, you will be asked which interface to use. If you provide this option, NAT3D will use the interface with that IP address.
+
+The command to get the ip address of the interfaces is _ifconfig_ on Linux/UNIX/Mac OS X. The interfaces are typically named "eth0/1.." for Ethernet and "wlan0/1.." or "en0/1.." on the Mac.
+
+On Windows, finding your IP address typically involves right-clicking the network connection icon in the tray (near the date), choosing properties, and one of options from there (depending on your specific Windows OS).
+
 
 == Port number on which to listen (option: _port_) ==
 
@@ -84,47 +90,6 @@ This is the log file to which the NAT3D events are sent. NAT3D appends the log t
 == Bridging (Optional, Option: _bridge_)==
 
 Setting _bridge_ to "on" means that no address is assigned to the TAP interface/adapter. Setting it to off means the TAP device/adapter is assigned the IP address specified.
-
-== Sample config file ==
-
-*Server:* (behind a NAT box)
-
-The server below uses 10.0.0.253 and 10.0.0.254 for source addresses for the NAT3D installation.
-{{{
-ip = 10.0.0.22
-resolver = 10.0.0.1
-port = 101
-tapnetmask = 10.0.0.252
-tapnetaddr = 255.255.255.252
-bridge = on
-}}}
-
-{{{
-ip = 10.0.0.22
-resolver = 10.0.0.1
-port = 101
-tapnetmask = 10.254.0.0
-tapnetaddr = 255.255.0.0
-bridge = off
-}}}
-
-The above is the same as using the config file:
-{{{
-ip = 10.0.0.22
-resolver = 10.0.0.1
-port = 101
-}}}
-
-The server does not require a resolver, so it is set to the resolver it uses (e.g the NAT box itself).
-
-*Client:*
-{{{
-ip = 150.x.x.x
-resolver = 150.x.x.x
-port = 101
-}}}
-
-The client requires the resolver, and is set to a resolver which can handle NAT3 queries.
 
 
 == IP Address of the interface on which to listen (option: _ip_) ==
