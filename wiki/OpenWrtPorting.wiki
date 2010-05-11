@@ -41,6 +41,17 @@ mkdir /dev/net
 mknod /dev/net/tun c 10 200  (Linux kernel 2.4.x)
 }}}
 
+= Set firewall rules on router =
+
+Some router/NAT to allow traffic to/from TUN device firewall rules needed to be changed as below. br0 below is the interface to the private network.
+
+{{{
+### Allow NAT3D traffic on tun* devices
+iptables -A forwarding_rule -i tun+ -o br0 -j ACCEPT
+iptables -A forwarding_rule -i br0 -o tun+ -j ACCEPT
+iptables -A input_rule -i tun+ -j ACCEPT
+iptables -A output_rule -o tun -j ACCEPT
+}}}
 
 = Build NAT3D server daemon for the NAT =
 
