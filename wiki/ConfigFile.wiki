@@ -56,8 +56,9 @@ Example: resolver = 127.0.0.1
 For the server, this is typically the interface connecting to the NAT i.e. Wifi or Ethernet. 
 For the client, this is the interface that connects to the Internet. It can be the same as the interface connecting to the NAT depending on your configuration.
 
-Example: ip = a.b.c.d
-_*Please do not enter 127.0.0.1 for the address of the interface.*_
+Example: _ip = a.b.c.d_
+
+*Please do not enter 127.0.0.1 for the address of the interface.*
 
 If you do not provide this option, you will be asked which interface to use. If you provide this option, NAT3D will use the interface with that IP address.
 
