@@ -7,6 +7,7 @@
   * 
 
 = Specific notes w.r.t Network behavior of the TAP device =
+  * <font color="red"> Bridging abandoned. NAT3D uses routing instead. This section included for any future attempt at reviving bridging </font>.
   * You must handle ARP for the network device. 
   * Replying to a query for an ARP request that asks for the address on the TUN/TAP device results in windows auto-configuring that device. See the source code for further details.
   * ARP queries for any network address in the TAP network should be replied with a different MAC address from that of the adapter (unlike Linux). See the source code for further details.
