@@ -2,11 +2,14 @@
 
 = Introduction =
 
-You need to be an administrator to run NATT. However, in Linux/Mac, it is sufficient to have access to the TUN/TAP device.
-Running NAT3D is with the following command on all Operating Systems:
+You need to be an administrator to run NATTT. However, in Linux/Mac, it is sufficient to have access to the TUN/TAP device.
+Running NAT3D is with the following command on Linux/UNIX:
 
 _./nat3d <config file>_
 (Read about the [ConfigFile config file]).
+
+On Windows:
+_NAT3win.exe <config file>_
 
 = Server/Client =
 
